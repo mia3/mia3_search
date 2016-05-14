@@ -7,12 +7,12 @@ if (!defined('TYPO3_MODE')) {
 	'MIA3.' . $_EXTKEY,
 	'Search',
 	array(
-		'SearchController' => 'index',
+		'Search' => 'index',
 		
 	),
 	// non-cacheable actions
 	array(
-		'SearchController' => 'index',
+		'Search' => 'index',
 		
 	)
 );
