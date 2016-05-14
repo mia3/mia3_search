@@ -1,6 +1,7 @@
 {
   "name": "mia3/mia3-search",
   "description": "search made awesome",
+  "type": "typo3-cms-extension",
   "authors": [
     {
       "name": "Marc Neuhaus",
