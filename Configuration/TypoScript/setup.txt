@@ -1,0 +1,57 @@
+
+plugin.tx_mia3search_search {
+	view {
+		templateRootPaths.0 = {$plugin.tx_mia3search_search.view.templateRootPath}
+		partialRootPaths.0 = {$plugin.tx_mia3search_search.view.partialRootPath}
+		layoutRootPaths.0 = {$plugin.tx_mia3search_search.view.layoutRootPath}
+	}
+	persistence {
+		storagePid = {$plugin.tx_mia3search_search.persistence.storagePid}
+	}
+}
+
+plugin.tx_mia3search._CSS_DEFAULT_STYLE (
+	textarea.f3-form-error {
+		background-color:#FF9F9F;
+		border: 1px #FF0000 solid;
+	}
+
+	input.f3-form-error {
+		background-color:#FF9F9F;
+		border: 1px #FF0000 solid;
+	}
+
+	.tx-mia3-search table {
+		border-collapse:separate;
+		border-spacing:10px;
+	}
+
+	.tx-mia3-search table th {
+		font-weight:bold;
+	}
+
+	.tx-mia3-search table td {
+		vertical-align:top;
+	}
+
+	.typo3-messages .message-error {
+		color:red;
+	}
+
+	.typo3-messages .message-ok {
+		color:green;
+	}
+
+)
+
+ # Module configuration
+module.tx_mia3search_web_mia3searchsearch {
+	persistence {
+		storagePid = {$module.tx_mia3search_search.persistence.storagePid}
+	}
+	view {
+		templateRootPaths.0 = {$module.tx_mia3search_search.view.templateRootPath}
+		partialRootPaths.0 = {$module.tx_mia3search_search.view.partialRootPath}
+		layoutRootPaths.0 = {$module.tx_mia3search_search.view.layoutRootPath}
+	}
+}

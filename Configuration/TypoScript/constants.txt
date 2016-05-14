@@ -1,0 +1,30 @@
+
+plugin.tx_mia3search_search {
+	view {
+		# cat=plugin.tx_mia3search_search/file; type=string; label=Path to template root (FE)
+		templateRootPath = EXT:mia3_search/Resources/Private/Templates/
+		# cat=plugin.tx_mia3search_search/file; type=string; label=Path to template partials (FE)
+		partialRootPath = EXT:mia3_search/Resources/Private/Partials/
+		# cat=plugin.tx_mia3search_search/file; type=string; label=Path to template layouts (FE)
+		layoutRootPath = EXT:mia3_search/Resources/Private/Layouts/
+	}
+	persistence {
+		# cat=plugin.tx_mia3search_search//a; type=string; label=Default storage PID
+		storagePid =
+	}
+}
+
+module.tx_mia3search_search {
+	view {
+		# cat=module.tx_mia3search_search/file; type=string; label=Path to template root (BE)
+		templateRootPath = EXT:mia3_search/Resources/Private/Backend/Templates/
+		# cat=module.tx_mia3search_search/file; type=string; label=Path to template partials (BE)
+		partialRootPath = EXT:mia3_search/Resources/Private/Backend/Partials/
+		# cat=module.tx_mia3search_search/file; type=string; label=Path to template layouts (BE)
+		layoutRootPath = EXT:mia3_search/Resources/Private/Backend/Layouts/
+	}
+	persistence {
+		# cat=module.tx_mia3search_search//a; type=string; label=Default storage PID
+		storagePid =
+	}
+}

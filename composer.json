@@ -1,0 +1,15 @@
+{
+  "name": "mia3/mia3-search",
+  "description": "search made awesome",
+  "authors": [
+    {
+      "name": "Marc Neuhaus",
+      "email": "marc@mia3.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "MIA3\\Mia3Search\\": "src/"
+    }
+  }
+}
