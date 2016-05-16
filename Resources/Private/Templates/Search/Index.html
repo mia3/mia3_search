@@ -1,0 +1,39 @@
+{namespace s=MIA3\Mia3Search\ViewHelpers}
+<div class="mia3-search">
+	<f:form action="index" class="search-form" method="get">
+		<f:form.textfield name="query" value="{query}" placeholder="Search..." class="form-control"/>
+		<button type="submit" class="btn btn-small btn-default">Search</button>
+	</f:form>
+
+	<s:paginate items="{results}" as="paginatedResults">
+		<strong>{paginatedResults.total}</strong>
+		<table class="table table-striped search-results">
+			<f:for each="{paginatedResults}" as="result">
+				<tr>
+					<td>
+						<div class="search-result">
+							{result._highlightResult.content.value -> f:format.raw() -> f:format.crop(maxCharacters: 300)}
+							<a href="{result.pageUrl}">{result.pageUrl}</a>
+						</div>
+					</td>
+				</tr>
+			</f:for>
+		</table>
+		<f:render partial="Pagination" arguments="{pagination: pagination}"/>
+	</s:paginate>
+</div>
+
+<style>
+	.search-form * {
+		display: inline;
+	}
+
+	.search-form {
+		overflow: hidden;
+		text-align: center;
+	}
+
+	.search-form input {
+		width: 200px;
+	}
+</style>

@@ -34,14 +34,21 @@ class SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControlle
 {
 
     /**
-     * action index
-     *
+     * @param string $query
      * @return void
      */
-    public function indexAction()
+    public function indexAction($query = NULL)
     {
-        echo 'foobar';
-        exit();
+        $index = new Index(array(
+            'adapter' => '\MIA3\Saku\Adapter\AlgoliaAdapter',
+            'applicationId' => 'MMA8VT1HTH',
+            'apiKey' => 'f768eaddfd68b70b95051de74a1e6a46'
+        ));
+        $this->view->assign('query', $query);
+        if (!empty($query)) {
+            $results = $index->search($query);
+            $this->view->assign('results', $results);
+        }
     }
 
 }

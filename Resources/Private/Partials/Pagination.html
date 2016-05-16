@@ -1,0 +1,36 @@
+<f:if condition="{pagination.showPagination}">
+	<div class="row">
+		<ul class="limits">
+			<f:for each="{limits}" as="active" key="value">
+				<f:if condition="{active}" >
+					<f:then><li class="active"></f:then><f:else><li></f:else></f:if>
+					<f:link.action action="list" addQueryString="true" arguments="{limit: value}">{value}</f:link.action>
+				</li>
+			</f:for>
+		</ul>
+		<ul class="pagination">
+			<f:if condition="{pagination.prevPage}">
+				<li class="prev">
+					<f:link.action addQueryString="true" arguments="{page: pagination.prevPage}">
+						&laquo;
+					</f:link.action>
+				</li>
+			</f:if>
+			<f:for each="{pagination.pages}" as="page">
+				<f:if condition="{pagination.currentPage} == {page}" >
+					<f:then><li class="active page"></f:then>
+					<f:else><li class="page"></f:else>
+				</f:if>
+					<f:link.action addQueryString="true" arguments="{page: page}">{page}</f:link.action>
+				</li>
+			</f:for>
+			<f:if condition="{pagination.nextPage}">
+				<li class="prev">
+					<f:link.action addQueryString="true" arguments="{page: pagination.nextPage}">
+						&raquo;
+					</f:link.action>
+				</li>
+			</f:if>
+		</ul>
+	</div>
+</f:if>

@@ -16,3 +16,19 @@ if (!defined('TYPO3_MODE')) {
 		
 	)
 );
+
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = 'MIA3\Mia3Search\Command\IndexCommandController';
+
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'] = array(
+	'\MIA3\Mia3Search\ParameterProviders\NewsParameterProvider',
+	'\MIA3\Mia3Search\ParameterProviders\LanguageParameterProvider'
+);
+
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['pageContentFilters'] = array(
+	function($pageContent) {
+		return str_replace("\n", '', strip_tags($pageContent));
+	},
+	function($pageContent) {
+		return preg_replace("/<script.*?\/script>/s", "", $pageContent);
+	}
+);
