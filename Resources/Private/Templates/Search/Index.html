@@ -12,7 +12,7 @@
 				<tr>
 					<td>
 						<div class="search-result">
-							{result._highlightResult.content.value -> f:format.raw() -> f:format.crop(maxCharacters: 300)}
+							<s:wrapWords words="{query}">{result.content -> f:format.raw() -> f:format.crop(maxCharacters: 300)}</s:wrapWords>
 							<a href="{result.pageUrl}">{result.pageUrl}</a>
 						</div>
 					</td>

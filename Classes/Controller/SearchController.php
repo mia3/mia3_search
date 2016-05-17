@@ -26,6 +26,7 @@ namespace MIA3\Mia3Search\Controller;
      *
      *  This copyright notice MUST APPEAR in all copies of the script!
      ***************************************************************/
+use MIA3\Saku\Index;
 
 /**
  * SearchController
@@ -39,11 +40,7 @@ class SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControlle
      */
     public function indexAction($query = NULL)
     {
-        $index = new Index(array(
-            'adapter' => '\MIA3\Saku\Adapter\AlgoliaAdapter',
-            'applicationId' => 'MMA8VT1HTH',
-            'apiKey' => 'f768eaddfd68b70b95051de74a1e6a46'
-        ));
+        $index = new Index($GLOBALS['TYPO3_CONF_VARS']['SEARCH']);
         $this->view->assign('query', $query);
         if (!empty($query)) {
             $results = $index->search($query);

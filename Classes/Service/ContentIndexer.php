@@ -36,21 +36,7 @@ class ContentIndexer {
 
     public function __construct() {
         $this->database = $GLOBALS['TYPO3_DB'];
-        $this->index = new Index(array(
-            'adapter' => '\MIA3\Saku\Adapter\AlgoliaAdapter',
-            'applicationId' => 'MMA8VT1HTH',
-            'apiKey' => 'f768eaddfd68b70b95051de74a1e6a46'
-        ));
-//        $configuration = $GLOBALS['TYPO3_CONF_VARS']['DB'];
-//        $this->index = new Index(array(
-//            'adapter' => '\MIA3\Saku\Adapter\MySQLAdapter',
-//            'database' => $configuration['database'],
-//            'host' => 'localhost',
-//            'username' => $configuration['username'],
-//            'password' => $configuration['password'],
-//            'port' => isset($configuration['port']) ? $configuration['port'] : NULL,
-//            'socket' => $configuration['socket']
-//        ));
+        $this->index = new Index($GLOBALS['TYPO3_CONF_VARS']['SEARCH']);
     }
 
     /**
@@ -83,9 +69,6 @@ class ContentIndexer {
      * @param string $baseUrl
      */
     public function indexPage($pageUid, $baseUrl) {
-        if ($pageUid != 23) {
-            return;
-        }
         $parameterGroups = array(
             array(
                 'id' => $pageUid,
@@ -100,12 +83,15 @@ class ContentIndexer {
                 $parameterGroups = $parameterProvider->extendParameterGroups($parameterGroups);
             }
         }
-        var_dump($parameterGroups);
 
         foreach($parameterGroups as $parameterGroup) {
             $parameterGroup['content'] = $this->getPageContent($parameterGroup);
             $parameterGroup['pageUrl'] = $this->getPageUrl($parameterGroup['content']);
             $parameterGroup['content'] = $this->applyPageContentFilters($parameterGroup['content']);
+
+            if (empty($parameterGroup['pageUrl'])) {
+                continue;
+            }
 
             try {
                 $this->index->addObject(
@@ -183,9 +169,10 @@ class ContentIndexer {
         unset($parameterGroup['baseUrl']);
 
         $parameterGroup['type'] = 3728;
+        $parameterGroup['no_cache'] = 1;
         $parameterGroup['columnPositions'] = implode(',', $this->getColumnPositions($pageUid));
         $url = $baseUrl . 'index.php?' . http_build_query($parameterGroup);
-        echo $url . chr(10);
+//        echo $url . chr(10);
         return GeneralUtility::getUrl($url);
     }
 
