@@ -80,14 +80,15 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
     }
 
     public function getDetailParameterGroup($parameterGroup, $newsRecord, $settings) {
-        $newsRecordUid = $this->getLocalizedNewsRecordUid($newsRecord, $parameterGroup);
+        $newsRecord = $this->getLocalizedNewsRecord($newsRecord, $parameterGroup);
         return array_replace(
             $parameterGroup,
             array(
                 'id' => $this->getDetailPage($settings, $newsRecord, $parameterGroup['id']),
+                'pageTitle' => $newsRecord['title'],
                 'tx_news_pi1' => array(
                     'action' => 'detail',
-                    'news' => $newsRecordUid
+                    'news' => $newsRecord['uid']
                 )
             )
         );
@@ -99,10 +100,10 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
         return $this->newsRepository->findDemanded($demand);
     }
 
-    public function getLocalizedNewsRecordUid($newRecord, $parameterGroup) {
+    public function getLocalizedNewsRecord($newRecord, $parameterGroup) {
         $languageUid = isset($parameterGroup['L']) ? $parameterGroup['L'] : 0;
         $row = $this->database->exec_SELECTgetSingleRow(
-            'uid',
+            '*',
             'tx_news_domain_model_news',
             sprintf(
                 '(l10n_parent = %s AND sys_language_uid = %s) OR (uid = %s AND sys_language_uid = -1) AND deleted = 0 AND hidden = 0' ,
@@ -111,7 +112,7 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
                 $newRecord->getUid()
             ) . BackendUtility::BEenableFields('tx_news_domain_model_news')
         );
-        return $row['uid'];
+        return $row;
     }
 
     /**

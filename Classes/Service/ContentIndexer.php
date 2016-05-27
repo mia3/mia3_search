@@ -69,10 +69,12 @@ class ContentIndexer {
      * @param string $baseUrl
      */
     public function indexPage($pageUid, $baseUrl) {
+        $pageRow = $this->getPage(($pageUid));
         $parameterGroups = array(
             array(
                 'id' => $pageUid,
-                'baseUrl' => $baseUrl
+                'baseUrl' => $baseUrl,
+                'pageTitle' => $pageRow['title']
             )
         );
         $parameterProviders = $this->getParameterProviders();
@@ -205,6 +207,19 @@ class ContentIndexer {
             '*',
             'pages',
             'is_siteroot = 1' . BackendUtility::BEenableFields('pages')
+        );
+    }
+
+    /**
+     * get all available sites
+     *
+     * @return array
+     */
+    public function getPage($pid) {
+        return $this->database->exec_SELECTgetSingleRow(
+            '*',
+            'pages',
+            'uid = ' . $pid . BackendUtility::BEenableFields('pages')
         );
     }
 
