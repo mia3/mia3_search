@@ -43,7 +43,11 @@ class SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControlle
         $index = new Index($GLOBALS['TYPO3_CONF_VARS']['SEARCH']);
         $this->view->assign('query', $query);
         if (!empty($query)) {
-            $results = $index->search($query);
+            $options = array();
+            $options['facets'] = array(
+                'L' => $GLOBALS['TSFE']->sys_page->sys_language_uid
+            );
+            $results = $index->search($query, $options);
             $this->view->assign('results', $results);
         }
     }
