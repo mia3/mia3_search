@@ -26,9 +26,9 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'] = ar
 
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['pageContentFilters'] = array(
 	function($pageContent) {
-		return str_replace("\n", '', strip_tags($pageContent));
+		return preg_replace("/<script\\b[^>]*>(.*?)<\\/script>/is", "", $pageContent);
 	},
 	function($pageContent) {
-		return preg_replace("/<script.*?\/script>/s", "", $pageContent);
+		return str_replace("\n", '', strip_tags($pageContent));
 	}
 );
