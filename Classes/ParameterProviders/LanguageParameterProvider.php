@@ -29,7 +29,10 @@ class LanguageParameterProvider implements ParameterProviderInterface
     public function extendParameterGroups($parameterGroups) {
         $newParameterGroups = array();
         
-        foreach ($parameterGroups as $parameterGroup) {
+        foreach ($parameterGroups as $key => $parameterGroup) {
+            if (!isset($parameterGroup['L'])) {
+                $parameterGroup['L'] = 0;
+            }
             // readd default language group
             $newParameterGroups[] = $parameterGroup;
 
