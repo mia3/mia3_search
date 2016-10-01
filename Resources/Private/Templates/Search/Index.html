@@ -12,7 +12,8 @@
 				<tr>
 					<td>
 						<div class="search-result">
-							<s:wrapWords words="{query}">{result.content -> f:format.raw() -> f:format.crop(maxCharacters: 300)}</s:wrapWords>
+							<h5>{result.pageTitle}</h5>
+							<s:wrapWords words="{query}">{result.content -> f:format.raw() -> f:format.crop(maxCharacters: 600)}</s:wrapWords>
 							<a href="{result.pageUrl}">{result.pageUrl}</a>
 						</div>
 					</td>
