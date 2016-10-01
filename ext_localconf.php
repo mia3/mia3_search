@@ -20,15 +20,21 @@ if (!defined('TYPO3_MODE')) {
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = 'MIA3\Mia3Search\Command\IndexCommandController';
 
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'] = array(
-	'\MIA3\Mia3Search\ParameterProviders\NewsParameterProvider',
 	'\MIA3\Mia3Search\ParameterProviders\LanguageParameterProvider'
 );
 
+if (class_exists('\GeorgRinger\News\Controller\NewsController')) {
+    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'][] = '\MIA3\Mia3Search\ParameterProviders\NewsParameterProvider';
+}
+if (class_exists('\Mia3\Mia3Location\Domain\Model\Location')) {
+    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'][] = '\MIA3\Mia3Search\ParameterProviders\Mia3LocationParameterProvider';
+}
+
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['pageContentFilters'] = array(
-	function($pageContent) {
+	'scriptTags' => function($pageContent) {
 		return preg_replace("/<script\\b[^>]*>(.*?)<\\/script>/is", "", $pageContent);
 	},
-	function($pageContent) {
+	'lineBreaks' => function($pageContent) {
 		return str_replace("\n", '', strip_tags($pageContent));
 	}
 );
