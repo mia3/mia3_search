@@ -90,6 +90,7 @@ class ContentIndexer {
             $parameterGroup['content'] = $this->getPageContent($parameterGroup);
             $parameterGroup['pageUrl'] = $this->getPageUrl($parameterGroup['content']);
             $parameterGroup['content'] = $this->applyPageContentFilters($parameterGroup['content']);
+            $parameterGroup['indexedAt'] = (new \DateTime())->format(\DateTime::ISO8601);
 
             if (empty($parameterGroup['pageUrl'])) {
                 continue;
