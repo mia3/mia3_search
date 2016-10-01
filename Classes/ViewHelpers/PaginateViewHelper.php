@@ -56,7 +56,7 @@ class PaginateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
 	 */
 	public function render() {
 		$this->query = $this->arguments['items'];
-		if (!$this->query instanceof SearchResults) {
+        if (!$this->query instanceof SearchResults) {
 			return '';
 		}
 		$this->request = $this->controllerContext->getRequest();
@@ -127,7 +127,7 @@ class PaginateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
 
 		$offset = ($currentPage - 1) * $this->limit;
 		$offset = $offset < 0 ? 0 : $offset;
-		$this->query->setPage($currentPage - 1);
+		$this->query->setPage($currentPage > 0 ? $currentPage - 1 : 0);
 		$pagination = array("offset" => $offset);
 
 		if(count($pages) > 1){
