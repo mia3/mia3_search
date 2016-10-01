@@ -1,5 +1,5 @@
 {
-  "name": "mia3/mia3-search",
+  "name": "mia3/mia3_search",
   "description": "search made awesome",
   "type": "typo3-cms-extension",
   "authors": [
@@ -8,6 +8,9 @@
       "email": "marc@mia3.com"
     }
   ],
+  "requires": {
+    "mia3/saku": "*"
+  },
   "autoload": {
     "psr-4": {
       "MIA3\\Mia3Search\\": "Classes/"
