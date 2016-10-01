@@ -20,7 +20,7 @@ if (TYPO3_MODE === 'BE') {
 		'search',	// Submodule key
 		'',						// Position
 		array(
-			'BackendController' => 'index',
+			'Backend' => 'index',
 			
 		),
 		array(
