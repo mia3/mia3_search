@@ -10,6 +10,7 @@ plugin.tx_mia3search_search {
 	}
 	settings {
 		adapter = \MIA3\Mia3Search\Adapter\Typo3MySQLAdapter
+		doktypes = 1,7
 		facets {
 			L {
 				field = L

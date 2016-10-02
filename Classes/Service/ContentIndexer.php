@@ -211,7 +211,8 @@ class ContentIndexer
     public function getSitePages($pid)
     {
         $queryGenerator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\QueryGenerator');
-        $pageUidList = $queryGenerator->getTreeList($pid, PHP_INT_MAX, 0, 'hidden = 0');
+        $query = 'hidden = 0 AND doktype IN (' . $this->settings['doktypes'] . ')';
+        $pageUidList = $queryGenerator->getTreeList($pid, PHP_INT_MAX, 0, $query);
 
         return explode(',', $pageUidList);
     }
