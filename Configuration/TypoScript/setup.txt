@@ -8,4 +8,13 @@ plugin.tx_mia3search_search {
 	persistence {
 		storagePid = {$plugin.tx_mia3search_search.persistence.storagePid}
 	}
+	settings {
+		adapter = \MIA3\Mia3Search\Adapter\Typo3MySQLAdapter
+		facets {
+			L {
+				field = L
+				handler = \MIA3\Mia3Search\FacetHandlers\LanguageFacetHandler
+			}
+		}
+	}
 }

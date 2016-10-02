@@ -1,6 +1,15 @@
 <?php
 namespace MIA3\Mia3Search\ParameterProviders;
 
+/*
+ * This file is part of the mia3/mia3_search package.
+ *
+ * (c) Marc Neuhaus <marc@mia3.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 use GeorgRinger\News\Controller\NewsController;
 use MIA3\Mia3Search\Configuration\BackendConfigurationManager;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -8,6 +17,10 @@ use TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Page\PageRepository;
 
+/**
+ * Class NewsParameterProvider
+ * @package MIA3\Mia3Search\ParameterProviders
+ */
 class NewsParameterProvider extends NewsController implements ParameterProviderInterface
 {
     /**
@@ -16,7 +29,7 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
     protected $database;
 
     /**
-     * @var \MIA3\Mia3Search\Configuration\PluginConfigurationManager
+     * @var \MIA3\Mia3Search\Configuration\SearchConfigurationManager
      * @inject
      */
     protected $configurationManager;
@@ -32,7 +45,8 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
     /**
      * @return integer
      */
-    public function getPriority() {
+    public function getPriority()
+    {
         return 10;
     }
 
@@ -40,17 +54,20 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
      * @param array $parameterGroups
      * @return array
      */
-    public function extendParameterGroups($parameterGroups) {
+    public function extendParameterGroups($parameterGroups)
+    {
         foreach ($parameterGroups as $parameterGroup) {
             $parameterGroups = array_merge(
                 $parameterGroups,
                 $this->addNewsPluginParameterGroups($parameterGroup)
             );
         }
+
         return $parameterGroups;
     }
 
-    public function addNewsPluginParameterGroups($parameterGroup) {
+    public function addNewsPluginParameterGroups($parameterGroup)
+    {
         $newsPlugins = $this->getNewsPlugins($parameterGroup);
         if (!is_array($newsPlugins)) {
             return array();
@@ -71,16 +88,19 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
             );
 
             $newsRecords = $this->findNewsRecords($settings);
-            foreach($newsRecords as $newsRecord) {
+            foreach ($newsRecords as $newsRecord) {
                 $detailParameterGroup = $this->getDetailParameterGroup($parameterGroup, $newsRecord, $settings);
                 $parameterGroups[] = $detailParameterGroup;
             }
         }
+
         return $parameterGroups;
     }
 
-    public function getDetailParameterGroup($parameterGroup, $newsRecord, $settings) {
+    public function getDetailParameterGroup($parameterGroup, $newsRecord, $settings)
+    {
         $newsRecord = $this->getLocalizedNewsRecord($newsRecord, $parameterGroup);
+
         return array_replace(
             $parameterGroup,
             array(
@@ -88,30 +108,34 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
                 'pageTitle' => $newsRecord['title'],
                 'tx_news_pi1' => array(
                     'action' => 'detail',
-                    'news' => $newsRecord['uid']
-                )
+                    'news' => $newsRecord['uid'],
+                ),
             )
         );
     }
 
-    public function findNewsRecords($settings) {
+    public function findNewsRecords($settings)
+    {
         $demand = $this->createDemandObjectFromSettings($flexform);
         $demand->setLimit(PHP_INT_MAX);
+
         return $this->newsRepository->findDemanded($demand);
     }
 
-    public function getLocalizedNewsRecord($newRecord, $parameterGroup) {
+    public function getLocalizedNewsRecord($newRecord, $parameterGroup)
+    {
         $languageUid = isset($parameterGroup['L']) ? $parameterGroup['L'] : 0;
         $row = $this->database->exec_SELECTgetSingleRow(
             '*',
             'tx_news_domain_model_news',
             sprintf(
-                '(l10n_parent = %s AND sys_language_uid = %s) OR (uid = %s AND sys_language_uid = -1) AND deleted = 0 AND hidden = 0' ,
+                '(l10n_parent = %s AND sys_language_uid = %s) OR (uid = %s AND sys_language_uid = -1) AND deleted = 0 AND hidden = 0',
                 $newRecord->getUid(),
                 $languageUid,
                 $newRecord->getUid()
             ) . BackendUtility::BEenableFields('tx_news_domain_model_news')
         );
+
         return $row;
     }
 
@@ -121,7 +145,8 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
      * @param array $parameterGroup
      * @return array
      */
-    public function getNewsPlugins($parameterGroup) {
+    public function getNewsPlugins($parameterGroup)
+    {
         $pageUid = $parameterGroup['id'];
         $language = isset($parameterGroup['L']) ? $parameterGroup['L'] : '0';
         $where = 'list_type = "news_pi1" AND pid = ' . $pageUid;
@@ -135,7 +160,8 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
         );
     }
 
-    public function getDetailPage($settings, $newsItem, $fallbackPid = 0) {
+    public function getDetailPage($settings, $newsItem, $fallbackPid = 0)
+    {
         $detailPidDeterminationCallbacks = [
             'flexform' => 'getDetailPidFromFlexform',
             'categories' => 'getDetailPidFromCategories',
@@ -148,6 +174,7 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
                 }
             }
         }
+
         return $detailPid > 0 ? $detailPid : $fallbackPid;
     }
 
@@ -168,6 +195,7 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
                 }
             }
         }
+
         return $detailPid;
     }
 

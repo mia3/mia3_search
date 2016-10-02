@@ -2,6 +2,7 @@
 <div class="mia3-search">
 	<f:form action="index" class="search-form" method="get">
 		<f:form.textfield name="query" value="{query}" placeholder="Search..." class="form-control"/>
+		<f:form.select name="facets[L]" value="{facets.L.value}" optionLabelField="label" optionValueField="value" options="{facets.L.options}" />
 		<button type="submit" class="btn btn-small btn-default">Search</button>
 	</f:form>
 
@@ -15,6 +16,7 @@
 							<h5>{result.pageTitle}</h5>
 							<s:wrapWords words="{query}">{result.content -> f:format.raw() -> f:format.crop(maxCharacters: 600)}</s:wrapWords>
 							<a href="{result.pageUrl}">{result.pageUrl}</a>
+							{result.score}
 						</div>
 					</td>
 				</tr>

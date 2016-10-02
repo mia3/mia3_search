@@ -1,8 +1,21 @@
 <?php
 namespace MIA3\Mia3Search\ParameterProviders;
 
+/*
+ * This file is part of the mia3/mia3_search package.
+ *
+ * (c) Marc Neuhaus <marc@mia3.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 
+/**
+ * Class LanguageParameterProvider
+ * @package MIA3\Mia3Search\ParameterProviders
+ */
 class LanguageParameterProvider implements ParameterProviderInterface
 {
     /**
@@ -18,7 +31,8 @@ class LanguageParameterProvider implements ParameterProviderInterface
     /**
      * @return integer
      */
-    public function getPriority() {
+    public function getPriority()
+    {
         return 0;
     }
 
@@ -26,9 +40,10 @@ class LanguageParameterProvider implements ParameterProviderInterface
      * @param array $parameterGroups
      * @return array
      */
-    public function extendParameterGroups($parameterGroups) {
+    public function extendParameterGroups($parameterGroups)
+    {
         $newParameterGroups = array();
-        
+
         foreach ($parameterGroups as $key => $parameterGroup) {
             if (!isset($parameterGroup['L'])) {
                 $parameterGroup['L'] = 0;
@@ -55,7 +70,8 @@ class LanguageParameterProvider implements ParameterProviderInterface
      * @param integer $pageUid
      * @return array
      */
-    public function getPageLanguages($pageUid) {
+    public function getPageLanguages($pageUid)
+    {
         return $this->database->exec_SELECTgetRows(
             'sys_language_uid',
             'pages_language_overlay',

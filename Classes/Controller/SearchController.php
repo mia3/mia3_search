@@ -1,55 +1,89 @@
 <?php
 namespace MIA3\Mia3Search\Controller;
 
+/*
+ * This file is part of the mia3/mia3_search package.
+ *
+ * (c) Marc Neuhaus <marc@mia3.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-    /***************************************************************
-     *
-     *  Copyright notice
-     *
-     *  (c) 2016 Marc Neuhaus <marc@mia3.com>, MIA3 GmbH & Co. KG
-     *
-     *  All rights reserved
-     *
-     *  This script is part of the TYPO3 project. The TYPO3 project is
-     *  free software; you can redistribute it and/or modify
-     *  it under the terms of the GNU General Public License as published by
-     *  the Free Software Foundation; either version 3 of the License, or
-     *  (at your option) any later version.
-     *
-     *  The GNU General Public License can be found at
-     *  http://www.gnu.org/copyleft/gpl.html.
-     *
-     *  This script is distributed in the hope that it will be useful,
-     *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-     *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     *  GNU General Public License for more details.
-     *
-     *  This copyright notice MUST APPEAR in all copies of the script!
-     ***************************************************************/
+use MIA3\Mia3Search\FacetHandlers\DefaultFacetHandler;
 use MIA3\Saku\Index;
+use TYPO3\CMS\Core\Database\DatabaseConnection;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * SearchController
+ * Class SearchController
+ * @package MIA3\Mia3Search\Controller
  */
 class SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionController
 {
 
     /**
+     * @var DatabaseConnection
+     */
+    protected $databaseConnection;
+
+    /**
      * @param string $query
      * @return void
      */
-    public function indexAction($query = NULL)
+    public function indexAction($query = null)
     {
-        $index = new Index($GLOBALS['TYPO3_CONF_VARS']['SEARCH']);
+        $index = new Index($this->settings);
         $this->view->assign('query', $query);
-        if (!empty($query)) {
-            $options = array();
-            $options['facets'] = array(
-                'L' => $GLOBALS['TSFE']->sys_page->sys_language_uid
-            );
-            $results = $index->search($query, $options);
-            $this->view->assign('results', $results);
+        $this->databaseConnection = $GLOBALS['TYPO3_DB'];
+
+        $options = array();
+        if ($this->request->hasArgument('facets')) {
+            $options['facets'] = $this->request->getArgument('facets');
         }
+
+        $facets = $this->addFacetLabels($index->getFacets());
+        foreach ($facets as $facetName => $facet) {
+            if (isset($options['facets'][$facetName])) {
+                $facets[$facetName]['value'] = $options['facets'][$facetName];
+            } else {
+                if (isset($facet['defaultValue'])) {
+                    $facets[$facetName]['value'] = $facet['defaultValue'];
+                    $options['facets'][$facetName] = $facet['defaultValue'];
+                }
+            }
+        }
+        $this->view->assign('facets', $facets);
+
+        foreach ($options['facets'] as $key => $value) {
+            if ($value === '') {
+                unset($options['facets'][$key]);
+            }
+        }
+
+        if (empty($query)) {
+            return;
+        }
+
+        $results = $index->search($query, $options);
+        $this->view->assign('results', $results);
     }
 
+    /**
+     * @param $facets
+     * @return mixed
+     */
+    protected function addFacetLabels($facets)
+    {
+        foreach ($facets as $facetName => $facet) {
+            if (isset($facet['handler'])) {
+                $handler = GeneralUtility::makeInstance(ltrim($facet['handler'], '\\'));
+            } else {
+                $handler = GeneralUtility::makeInstance(ltrim(DefaultFacetHandler::class, '\\'));
+            }
+            $facets[$facetName] = $handler->addOptionLabels($facet);
+        }
+
+        return $facets;
+    }
 }

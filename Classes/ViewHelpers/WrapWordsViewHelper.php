@@ -1,20 +1,18 @@
 <?php
 namespace MIA3\Mia3Search\ViewHelpers;
 
-    /*                                                                        *
-     * This script is part of the TYPO3 project - inspiring people to share!  *
-     *                                                                        *
-     * TYPO3 is free software; you can redistribute it and/or modify it under *
-     * the terms of the GNU General Public License version 2 as published by  *
-     * the Free Software Foundation.                                          *
-     *                                                                        *
-     * This script is distributed in the hope that it will be useful, but     *
-     * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
-     * TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General      *
-     * Public License for more details.                                       *
-     *                                                                        */
+/*
+ * This file is part of the mia3/mia3_search package.
+ *
+ * (c) Marc Neuhaus <marc@mia3.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 /**
+ * Class WrapWordsViewHelper
+ * @package MIA3\Mia3Search\ViewHelpers
  */
 class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper
 {
@@ -28,8 +26,14 @@ class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
      * @param string $wordsBeforeMatch
      * @return string
      */
-    public function render($words, $wrap = '<strong>|</strong>', $crop = null, $suffix = '&hellip;', $prefix = '&hellip;', $wordsBeforeMatch = 5)
-    {
+    public function render(
+        $words,
+        $wrap = '<strong>|</strong>',
+        $crop = null,
+        $suffix = '&hellip;',
+        $prefix = '&hellip;',
+        $wordsBeforeMatch = 5
+    ) {
         $content = $this->renderChildren();
         if (!is_array($words)) {
             $words = preg_split('/[ ,\.\?]/s', $words);
@@ -39,7 +43,7 @@ class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
 //            $content = $this->cutBeforeMatch($content, $words, $crop, $prefix);
         }
 
-        if ($crop !== NULL) {
+        if ($crop !== null) {
             $content = $this->cropWords($content, $crop, $suffix);
         }
 
@@ -56,10 +60,12 @@ class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
                 }
             }
         }
+
         return $content;
     }
 
-    public function cutBeforeMatch($content, $words, $crop, $prefix) {
+    public function cutBeforeMatch($content, $words, $crop, $prefix)
+    {
         $contentWords = preg_split('/[ ,\.\?]/s', $content);
         foreach ($contentWords as $key => $contentWord) {
             foreach ($words as $word) {
@@ -76,6 +82,7 @@ class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
                 }
             }
         }
+
         return $content;
     }
 

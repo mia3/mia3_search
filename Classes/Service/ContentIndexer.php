@@ -1,28 +1,33 @@
 <?php
 namespace MIA3\Mia3Search\Service;
 
-use DmitryDulepov\Realurl\Encoder\UrlEncoder;
+/*
+ * This file is part of the mia3/mia3_search package.
+ *
+ * (c) Marc Neuhaus <marc@mia3.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 use MIA3\Mia3Search\ParameterProviders\ParameterProviderInterface;
 use MIA3\Saku\Index;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\DatabaseConnection;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
 
-/*                                                                        *
- * This script is part of the TYPO3 project - inspiring people to share!  *
- *                                                                        *
- * TYPO3 is free software; you can redistribute it and/or modify it under *
- * the terms of the GNU General Public License version 2 as published by  *
- * the Free Software Foundation.                                          *
- *                                                                        *
- * This script is distributed in the hope that it will be useful, but     *
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
- * TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General      *
- * Public License for more details.                                       *
- *                                                                        */
+/**
+ * Class ContentIndexer
+ * @package MIA3\Mia3Search\Service
+ */
+class ContentIndexer
+{
 
-class ContentIndexer {
+    /**
+     * @var \MIA3\Mia3Search\Configuration\SearchConfigurationManager
+     * @inject
+     */
+    protected $configurationManager;
 
     /**
      * @var DatabaseConnection
@@ -34,17 +39,27 @@ class ContentIndexer {
      */
     protected $index;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->database = $GLOBALS['TYPO3_DB'];
-        $this->index = new Index($GLOBALS['TYPO3_CONF_VARS']['SEARCH']);
     }
 
     /**
      * Update mia3_search indexes
      */
-    public function update() {
+    public function update()
+    {
         $sites = $this->getSites();
+
         foreach ($sites as $site) {
+            $settings = $this->configurationManager->getPageTypoScript($site['uid'],
+                'plugin.tx_mia3search_search.settings');
+
+            if ($settings === null) {
+                throw new \Exception('missing search configuration, did you forget to include the mia3_search typoscript template?');
+            }
+
+            $this->index = new Index($settings);
             $this->indexSite($site);
         }
     }
@@ -54,7 +69,8 @@ class ContentIndexer {
      *
      * @param integer $site
      */
-    public function indexSite($site) {
+    public function indexSite($site)
+    {
         $baseUrl = $this->getBaseUrl($site['uid']);
         $pages = $this->getSitePages($site['uid']);
         foreach ($pages as $pageUid) {
@@ -68,14 +84,15 @@ class ContentIndexer {
      * @param integer $pageUid
      * @param string $baseUrl
      */
-    public function indexPage($pageUid, $baseUrl) {
+    public function indexPage($pageUid, $baseUrl)
+    {
         $pageRow = $this->getPage(($pageUid));
         $parameterGroups = array(
             array(
                 'id' => $pageUid,
                 'baseUrl' => $baseUrl,
-                'pageTitle' => $pageRow['title']
-            )
+                'pageTitle' => $pageRow['title'],
+            ),
         );
         $parameterProviders = $this->getParameterProviders();
 
@@ -86,13 +103,22 @@ class ContentIndexer {
             }
         }
 
-        foreach($parameterGroups as $parameterGroup) {
+        foreach ($parameterGroups as $parameterGroup) {
+            $start = microtime();
             $parameterGroup['content'] = $this->getPageContent($parameterGroup);
             $parameterGroup['pageUrl'] = $this->getPageUrl($parameterGroup['content']);
+            $parameterGroup['language'] = $this->getLanguage($parameterGroup['content']);
             $parameterGroup['content'] = $this->applyPageContentFilters($parameterGroup['content']);
             $parameterGroup['indexedAt'] = (new \DateTime())->format(\DateTime::ISO8601);
 
+            $categories = CategoryApi::getRelatedCategories($parameterGroup['id'], 'categories', 'pages');
+            $parameterGroup['categories'] = array();
+            foreach ($categories as $category) {
+                $parameterGroup['categories'][] = $category['uid'];
+            }
+
             if (empty($parameterGroup['pageUrl'])) {
+                echo 'Failed to index ' . $parameterGroup['id'] . chr(10);
                 continue;
             }
 
@@ -101,24 +127,26 @@ class ContentIndexer {
                     $parameterGroup,
                     $parameterGroup['pageUrl']
                 );
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 var_dump($e->getMessage());
             }
+            echo 'Indexed in ' . number_format(microtime() . $start, 2) . 's ' . chr(10);
         }
     }
 
-    public function getParameterProviders() {
-        $parameterProviders = (array) $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'];
+    public function getParameterProviders()
+    {
+        $parameterProviders = (array)$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'];
 
         $objectManager = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class);
 
         // create instances
-        array_walk($parameterProviders, function(&$parameterProvider) use($objectManager) {
+        array_walk($parameterProviders, function (&$parameterProvider) use ($objectManager) {
             $parameterProvider = $objectManager->get(ltrim($parameterProvider, '\\'));
         });
 
         // sort instances by priority
-        usort($parameterProviders, function($left, $right){
+        usort($parameterProviders, function ($left, $right) {
             return $left->getPriority() > $right->getPriority();
         });
 
@@ -131,21 +159,38 @@ class ContentIndexer {
      * @param string $pageContent
      * @return string
      */
-    public function getPageUrl($pageContent) {
-        preg_match('/<!--PageUrl:(.*)-->/s', $pageContent, $match);
-        return $match[1];
+    public function getPageUrl($pageContent)
+    {
+        preg_match('/<!--PageUrl:(.*)-->/Us', $pageContent, $match);
+
+        return trim($match[1]);
+    }
+
+    /**
+     * Parse out pageUrl from pageContent
+     *
+     * @param string $pageContent
+     * @return string
+     */
+    public function getLanguage($pageContent)
+    {
+        preg_match('/<!--Language:(.*)-->/Us', $pageContent, $match);
+
+        return trim($match[1]);
     }
 
     /**
      * @param string $pageContent
      * @return string
      */
-    public function applyPageContentFilters($pageContent) {
+    public function applyPageContentFilters($pageContent)
+    {
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['pageContentFilters'])) {
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['pageContentFilters'] as $filter) {
                 $pageContent = call_user_func($filter, $pageContent);
             }
         }
+
         return $pageContent;
     }
 
@@ -155,9 +200,11 @@ class ContentIndexer {
      * @param integer $pid
      * @return array
      */
-    public function getSitePages($pid) {
-        $queryGenerator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\QueryGenerator' );
-        $pageUidList = $queryGenerator->getTreeList($pid, PHP_INT_MAX, 0, 1);
+    public function getSitePages($pid)
+    {
+        $queryGenerator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\QueryGenerator');
+        $pageUidList = $queryGenerator->getTreeList($pid, PHP_INT_MAX, 0, 'hidden = 0');
+
         return explode(',', $pageUidList);
     }
 
@@ -167,15 +214,17 @@ class ContentIndexer {
      * @param array $parameterGroup
      * @return string
      */
-    public function getPageContent($parameterGroup) {
+    public function getPageContent($parameterGroup)
+    {
         $baseUrl = $parameterGroup['baseUrl'];
         unset($parameterGroup['baseUrl']);
 
         $parameterGroup['type'] = 3728;
-        $parameterGroup['no_cache'] = 1;
+//        $parameterGroup['no_cache'] = 1;
         $parameterGroup['columnPositions'] = implode(',', $this->getColumnPositions($pageUid));
         $url = $baseUrl . 'index.php?' . http_build_query($parameterGroup);
-//        echo $url . chr(10);
+        echo $url . chr(10);
+
         return GeneralUtility::getUrl($url);
     }
 
@@ -185,7 +234,8 @@ class ContentIndexer {
      * @param integer $pageUid
      * @return array
      */
-    public function getColumnPositions($pageUid) {
+    public function getColumnPositions($pageUid)
+    {
         $rows = $this->database->exec_SELECTgetRows(
             'colPos',
             'tt_content',
@@ -195,6 +245,7 @@ class ContentIndexer {
             '',
             'colPos'
         );
+
         return array_keys($rows);
     }
 
@@ -203,7 +254,8 @@ class ContentIndexer {
      *
      * @return array
      */
-    public function getSites() {
+    public function getSites()
+    {
         return $this->database->exec_SELECTgetRows(
             '*',
             'pages',
@@ -216,7 +268,8 @@ class ContentIndexer {
      *
      * @return array
      */
-    public function getPage($pid) {
+    public function getPage($pid)
+    {
         return $this->database->exec_SELECTgetSingleRow(
             '*',
             'pages',
@@ -230,12 +283,14 @@ class ContentIndexer {
      * @param integer $siteUid
      * @return string
      */
-    public function getBaseUrl($siteUid) {
+    public function getBaseUrl($siteUid)
+    {
         $domainRecord = $this->database->exec_SELECTgetSingleRow(
             '*',
             'sys_domain',
             'pid = ' . $siteUid . BackendUtility::BEenableFields('sys_domain')
         );
+
         return sprintf('http://%s/', $domainRecord['domainName']);
     }
 }
