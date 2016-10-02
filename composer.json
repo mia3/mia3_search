@@ -8,7 +8,7 @@
       "email": "marc@mia3.com"
     }
   ],
-  "requires": {
+  "require": {
     "mia3/saku": "*"
   },
   "autoload": {
