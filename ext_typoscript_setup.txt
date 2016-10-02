@@ -24,5 +24,9 @@ mia3SearchPage.10 {
 #}
 mia3SearchPage.20 = FLUIDTEMPLATE
 mia3SearchPage.20 {
-	file = typo3conf/ext/mia3_search/Resources/Private/Partials/PageUrl.html
+	file = typo3conf/ext/mia3_search/Resources/Private/Partials/PageInformation.html
+	variables {
+		language = TEXT
+		language.value < config.language
+	}
 }
