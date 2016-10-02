@@ -17,6 +17,9 @@ if (!defined('TYPO3_MODE')) {
 	)
 );
 
+
+$GLOBALS['TYPO3_CONF_VARS']['FE']['eID_include']['mia3_search_server_identification'] = 'EXT:mia3_search/Classes/Eid/ServerIdentificationEid.php';
+
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = 'MIA3\Mia3Search\Command\IndexCommandController';
 
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'] = array(

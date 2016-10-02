@@ -39,6 +39,11 @@ class ContentIndexer
      */
     protected $index;
 
+    /**
+     * @var array
+     */
+    protected $settings;
+
     public function __construct()
     {
         $this->database = $GLOBALS['TYPO3_DB'];
@@ -52,14 +57,14 @@ class ContentIndexer
         $sites = $this->getSites();
 
         foreach ($sites as $site) {
-            $settings = $this->configurationManager->getPageTypoScript($site['uid'],
+            $this->settings = $this->configurationManager->getPageTypoScript($site['uid'],
                 'plugin.tx_mia3search_search.settings');
 
-            if ($settings === null) {
-                throw new \Exception('missing search configuration, did you forget to include the mia3_search typoscript template?');
+            if ($this->settings === null) {
+                continue;
             }
 
-            $this->index = new Index($settings);
+            $this->index = new Index($this->settings);
             $this->indexSite($site);
         }
     }
@@ -72,6 +77,9 @@ class ContentIndexer
     public function indexSite($site)
     {
         $baseUrl = $this->getBaseUrl($site['uid']);
+        if ($baseUrl === NULL) {
+            return;
+        }
         $pages = $this->getSitePages($site['uid']);
         foreach ($pages as $pageUid) {
             $this->indexPage($pageUid, $baseUrl);
@@ -220,7 +228,7 @@ class ContentIndexer
         unset($parameterGroup['baseUrl']);
 
         $parameterGroup['type'] = 3728;
-//        $parameterGroup['no_cache'] = 1;
+        $parameterGroup['no_cache'] = 1;
         $parameterGroup['columnPositions'] = implode(',', $this->getColumnPositions($pageUid));
         $url = $baseUrl . 'index.php?' . http_build_query($parameterGroup);
         echo $url . chr(10);
@@ -285,12 +293,22 @@ class ContentIndexer
      */
     public function getBaseUrl($siteUid)
     {
-        $domainRecord = $this->database->exec_SELECTgetSingleRow(
+
+        $domainRecords = $this->database->exec_SELECTgetRows(
             '*',
             'sys_domain',
             'pid = ' . $siteUid . BackendUtility::BEenableFields('sys_domain')
         );
 
-        return sprintf('http://%s/', $domainRecord['domainName']);
+        $token = uniqid('', true);
+        file_put_contents(PATH_site . 'typo3temp/mia3_search_server_identification', $token);
+        foreach($domainRecords as $domainRecord) {
+            $baseUrl = sprintf('http://%s/', $domainRecord['domainName']);
+            $serverIdentificationUrl = $baseUrl . 'index.php?eID=mia3_search_server_identification';
+            $remoteToken = GeneralUtility::getUrl($serverIdentificationUrl);
+            if ($token == $remoteToken) {
+                return $baseUrl;
+            }
+        }
     }
 }
