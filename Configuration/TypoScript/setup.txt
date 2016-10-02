@@ -18,4 +18,79 @@ plugin.tx_mia3search_search {
 			}
 		}
 	}
+
+	_CSS_DEFAULT_STYLE (
+		.mia3-search-form {
+			max-width: 480px;
+			margin: 0 auto;
+		}
+
+		.mia3-search-primary {
+			overflow: hidden;
+			clear: both;
+		}
+
+		.mia3-search-query {
+			float: left;
+			width: calc(100% - 110px);
+			margin-right: 10px;
+			padding: 8px 16px;
+		}
+
+		.mia3-search-submit {
+			float: left;
+			width: 100px;
+			padding: 10px 16px;
+		}
+
+		.mia3-search-resultTotal {
+			float: left;
+			max-width: 300px;
+		}
+
+		.mia-search-language {
+			float: right;
+		}
+
+		.mia3-search-secondary {
+			padding: 15px 0;
+			overflow: hidden;
+			clear: both;
+			border-top: 1px solid #efefef;
+			margin-top: 15px;
+		}
+
+		.mia3-search-result {
+			margin-bottom: 32px;
+		}
+
+		.mia3-search-result-header {
+			font-size: 1.4em;
+		}
+
+		.mia3-search-result-url {
+			font-size: 0.8em;
+			font-weight: bold;
+		}
+
+		.mia3-search-result-content {
+			font-size: 1em;
+		}
+
+		.mia3-search-pagination {
+			text-align: center;
+		}
+
+		.mia3-search-pagination-prev,
+		.mia3-search-pagination-next,
+		.mia3-search-pagination-page {
+			display: inline-block;
+		}
+
+		.mia3-search-pagination-prev:before,
+		.mia3-search-pagination-next:before,
+		.mia3-search-pagination-page:before {
+			display: none;
+		}
+	)
 }
