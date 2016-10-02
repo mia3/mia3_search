@@ -10,6 +10,8 @@ namespace MIA3\Mia3Search\FacetHandlers;
  * file that was distributed with this source code.
  */
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+
 /**
  * Class LanguageFacetHandler
  * @package MIA3\Mia3Search\FacetHandlers
@@ -22,12 +24,14 @@ class LanguageFacetHandler extends DefaultFacetHandler implements FacetHandlerIn
      */
     public function addOptionLabels($facet)
     {
+        $defaultLanguageLabel = BackendUtility::getModTSconfig(1, 'mod.SHARED.defaultLanguageLabel');
+
         $facet = array_replace([
             'table' => 'sys_language',
             'idField' => 'uid',
             'labelField' => 'title',
             'labelMap' => [
-                '0' => 'Deutsch',
+                '0' => $defaultLanguageLabel['value']
             ],
             'defaultValue' => $GLOBALS['TSFE']->sys_page->sys_language_uid,
         ], $facet);
