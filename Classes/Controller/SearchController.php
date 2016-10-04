@@ -66,11 +66,12 @@ class SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControlle
         }
 
         if (empty($query)) {
+            $this->view->assign('hasNoResults', false);
             return;
         }
-
         $results = $index->search($query, $options);
         $this->view->assign('results', $results);
+        $this->view->assign('hasNoResults', $results->getTotal() < 1);
     }
 
     /**

@@ -18,8 +18,11 @@
 		</div>
 	</f:form>
 
-	<f:if condition="{results}">
+	<f:if condition="{hasNoResults}}">
 		<f:then>
+			{f:translate(key: 'tx_mia3search_search.no_results')}
+		</f:then>
+		<f:else>
 			<s:paginate items="{results}" as="paginatedResults">
 				<f:for each="{paginatedResults}" as="result">
 					<div class="mia3-search-result">
@@ -38,9 +41,6 @@
 				</f:for>
 				<f:render partial="Pagination" arguments="{pagination: pagination}"/>
 			</s:paginate>
-		</f:then>
-		<f:else>
-			{f:translate(key: 'tx_mia3search_search.no_results')}
 		</f:else>
 	</f:if>
 </div>
