@@ -12,6 +12,7 @@ namespace MIA3\Mia3Search\Configuration;
 
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
+use TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser;
 
 /**
  * Class SearchConfigurationManager
@@ -24,6 +25,20 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
      * @inject
      */
     protected $flexformService;
+
+    /**
+     * @param $pageId
+     * @return array
+     */
+    public static function getRootline($pageId)
+    {
+        /** @var $sysPage \TYPO3\CMS\Frontend\Page\PageRepository */
+        $sysPage = GeneralUtility::makeInstance(\TYPO3\CMS\Frontend\Page\PageRepository::class);
+        // Get the rootline for the current page
+        $rootline = $sysPage->getRootLine($pageId, '', true);
+
+        return $rootline;
+    }
 
     /**
      * get flexform of tt_content
@@ -61,10 +76,7 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
             // Get the root line
             $rootline = array();
             if ($pageId > 0) {
-                /** @var $sysPage \TYPO3\CMS\Frontend\Page\PageRepository */
-                $sysPage = GeneralUtility::makeInstance(\TYPO3\CMS\Frontend\Page\PageRepository::class);
-                // Get the rootline for the current page
-                $rootline = $sysPage->getRootLine($pageId, '', true);
+                $rootline = self::getRootline($pageId);
             }
             // This generates the constants/config + hierarchy info for the template.
             $template->runThroughTemplates($rootline, 0);
@@ -80,5 +92,101 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
         }
 
         return $typoscript;
+    }
+
+    /**
+     * Returns the merged Page TSconfig for page id, $id.
+     * Please read details about module programming elsewhere!
+     *
+     * @param int $id Page uid
+     * @param string $path
+     * @return array
+     */
+    public static function getModTSconfig($id, $path = NULL)
+    {
+        $tsconfig = GeneralUtility::removeDotsFromTS(static::getPagesTSconfig($id));
+
+        if ($path !== null) {
+            $tsconfig = ObjectAccess::getPropertyPath($tsconfig, $path);
+        }
+
+        return $tsconfig;
+    }
+
+    /**
+     * Returns the Page TSconfig for page with id, $id
+     *
+     * @param int $id Page uid for which to create Page TSconfig
+     * @param array $rootLine If $rootLine is an array, that is used as rootline, otherwise rootline is just calculated
+     * @param bool $returnPartArray If $returnPartArray is set, then the array with accumulated Page TSconfig is returned non-parsed. Otherwise the output will be parsed by the TypoScript parser.
+     * @return array Page TSconfig
+     * @see \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser
+     */
+    public static function getPagesTSconfig($id, $rootLine = null, $returnPartArray = false)
+    {
+        static $pagesTSconfig_cacheReference = [];
+        static $combinedTSconfig_cache = [];
+
+        $id = (int)$id;
+        if ($returnPartArray === false
+            && $rootLine === null
+            && isset($pagesTSconfig_cacheReference[$id])
+        ) {
+            return $combinedTSconfig_cache[$pagesTSconfig_cacheReference[$id]];
+        } else {
+            $TSconfig = [];
+            if (!is_array($rootLine)) {
+                $useCacheForCurrentPageId = true;
+                $rootLine = self::getRootline($id);
+            } else {
+                $useCacheForCurrentPageId = false;
+            }
+
+            // Order correctly
+            ksort($rootLine);
+            $TSdataArray = [];
+            // Setting default configuration
+            $TSdataArray['defaultPageTSconfig'] = $GLOBALS['TYPO3_CONF_VARS']['BE']['defaultPageTSconfig'];
+            foreach ($rootLine as $k => $v) {
+                if (trim($v['tsconfig_includes'])) {
+                    $includeTsConfigFileList = GeneralUtility::trimExplode(',', $v['tsconfig_includes'], true);
+                    // Traversing list
+                    foreach ($includeTsConfigFileList as $key => $includeTsConfigFile) {
+                        if (StringUtility::beginsWith($includeTsConfigFile, 'EXT:')) {
+                            list($includeTsConfigFileExtensionKey, $includeTsConfigFilename) = explode(
+                                '/',
+                                substr($includeTsConfigFile, 4),
+                                2
+                            );
+                            if (
+                                (string)$includeTsConfigFileExtensionKey !== ''
+                                && ExtensionManagementUtility::isLoaded($includeTsConfigFileExtensionKey)
+                                && (string)$includeTsConfigFilename !== ''
+                            ) {
+                                $includeTsConfigFileAndPath = ExtensionManagementUtility::extPath($includeTsConfigFileExtensionKey) .
+                                    $includeTsConfigFilename;
+                                if (file_exists($includeTsConfigFileAndPath)) {
+                                    $TSdataArray['uid_' . $v['uid'] . '_static_' . $key] = GeneralUtility::getUrl($includeTsConfigFileAndPath);
+                                }
+                            }
+                        }
+                    }
+                }
+                $TSdataArray['uid_' . $v['uid']] = $v['TSconfig'];
+            }
+            $TSdataArray = TypoScriptParser::checkIncludeLines_array($TSdataArray);
+            if ($returnPartArray) {
+                return $TSdataArray;
+            }
+            // Parsing the page TS-Config
+            $pageTS = implode(LF . '[GLOBAL]' . LF, $TSdataArray);
+            /* @var $parseObj \TYPO3\CMS\Backend\Configuration\TsConfigParser */
+            $parseObj = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Configuration\TsConfigParser::class);
+            $res = $parseObj->parseTSconfig($pageTS, 'PAGES', $id, $rootLine);
+            if ($res) {
+                $TSconfig = $res['TSconfig'];
+            }
+        }
+        return $TSconfig;
     }
 }
