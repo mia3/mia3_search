@@ -107,7 +107,7 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
                 'id' => $this->getDetailPage($settings, $newsRecord, $parameterGroup['id']),
                 'pageTitle' => $newsRecord['title'],
                 'tx_news_pi1' => array(
-                    'action' => 'detail',
+//                    'action' => 'detail',
                     'news' => $newsRecord['uid'],
                 ),
             )
@@ -129,10 +129,14 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
             '*',
             'tx_news_domain_model_news',
             sprintf(
-                '(l10n_parent = %s AND sys_language_uid = %s) OR (uid = %s AND sys_language_uid = -1) AND deleted = 0 AND hidden = 0',
+                '(
+                    (l10n_parent = %1$s AND sys_language_uid = %2$s) 
+                    OR (uid = %1$s AND sys_language_uid = -1)
+                    OR (uid = %1$s AND sys_language_uid = %2$s)
+                ) 
+                AND deleted = 0 AND hidden = 0',
                 $newRecord->getUid(),
-                $languageUid,
-                $newRecord->getUid()
+                $languageUid
             ) . BackendUtility::BEenableFields('tx_news_domain_model_news')
         );
 
