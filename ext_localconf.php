@@ -29,9 +29,9 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'] = ar
 if (class_exists('\GeorgRinger\News\Controller\NewsController')) {
     $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'][] = '\MIA3\Mia3Search\ParameterProviders\NewsParameterProvider';
 }
-if (class_exists('\Mia3\Mia3Location\Domain\Model\Location')) {
-    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'][] = '\MIA3\Mia3Search\ParameterProviders\Mia3LocationParameterProvider';
-}
+//if (class_exists('\Mia3\Mia3Location\Domain\Model\Location')) {
+//    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'][] = '\MIA3\Mia3Search\ParameterProviders\Mia3LocationParameterProvider';
+//}
 
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['pageContentFilters'] = array(
 	'scriptTags' => function($pageContent) {
