@@ -32,7 +32,7 @@ class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
         $crop = null,
         $suffix = '&hellip;',
         $prefix = '&hellip;',
-        $wordsBeforeMatch = 5
+        $wordsBeforeMatch = 10
     ) {
         $content = $this->renderChildren();
         if (!is_array($words)) {
@@ -40,7 +40,7 @@ class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
         }
 
         if ($wordsBeforeMatch > 0) {
-//            $content = $this->cutBeforeMatch($content, $words, $crop, $prefix);
+            $content = $this->cutBeforeMatch($content, $words, $wordsBeforeMatch, $prefix);
         }
 
         if ($crop !== null) {
@@ -64,12 +64,12 @@ class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
         return $content;
     }
 
-    public function cutBeforeMatch($content, $words, $crop, $prefix)
+    public function cutBeforeMatch($content, $words, $wordsBeforeMatch, $prefix)
     {
         $contentWords = preg_split('/[ ,\.\?]/s', $content);
         foreach ($contentWords as $key => $contentWord) {
             foreach ($words as $word) {
-                similar_text(strtolower($contentWord), strtolower($word), $match);
+                similar_text(strtolower(trim($contentWord)), strtolower(trim($word)), $match);
                 if ($match > 80) {
                     $startPosition = strpos($content, $contentWord);
                     for ($i = 1; $i <= $wordsBeforeMatch; $i++) {
@@ -77,7 +77,7 @@ class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
                             $startPosition -= strlen($contentWords[$key - $i]) + 1;
                         }
                     }
-//                    $content = $prefix . ' ' . substr($content, $startPosition);
+                    $content = $prefix . ' ' . substr($content, $startPosition);
                     break;
                 }
             }
