@@ -32,7 +32,7 @@ class LanguageFacetHandler extends DefaultFacetHandler implements FacetHandlerIn
             'idField' => 'uid',
             'labelField' => 'title',
             'labelMap' => [
-                '0' => $defaultLanguageLabel['value']
+                '0' => $defaultLanguageLabel
             ],
             'defaultValue' => $GLOBALS['TSFE']->sys_page->sys_language_uid,
         ], $facet);
