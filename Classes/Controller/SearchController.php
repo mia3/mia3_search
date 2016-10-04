@@ -33,6 +33,10 @@ class SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControlle
      */
     public function indexAction($query = null)
     {
+        if (!isset($this->settings['adapter'])) {
+            throw new \Exception('could not determine search adapter, did you forget to include the mia3_search typoscript template?');
+        }
+
         $index = new Index($this->settings);
         $this->view->assign('query', $query);
         $this->databaseConnection = $GLOBALS['TYPO3_DB'];
