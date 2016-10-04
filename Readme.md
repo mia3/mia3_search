@@ -18,7 +18,7 @@ you can use the ```index:update`` command to manually start the indexing process
 
 **periodic indexing**
 
-you can use the scheduler to schedule a peridoc execution of the ```index:update``` command 
+you can use the scheduler to schedule a periodic execution of the ```index:update``` command 
 
 ## configuration
 
