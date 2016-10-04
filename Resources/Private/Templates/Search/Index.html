@@ -2,7 +2,7 @@
 <div class="mia3-search">
 	<f:form action="index" class="mia3-search-form" method="get">
 		<div class="mia3-search-primary">
-			<f:form.textfield name="query" value="{query}" placeholder="Search..." class="mia3-search-query"/>
+			<f:form.textfield name="query" value="{query}" placeholder="{f:translate(key: 'tx_mia3search_search.input_placeholder')}" class="mia3-search-query"/>
 			<button type="submit" class="mia3-search-submit">
 				{f:translate(key: 'tx_mia3search_search.search')}
 			</button>
@@ -10,28 +10,37 @@
 
 		<div class="mia3-search-secondary">
 			<div class="mia3-search-resultTotal">
-				{f:translate(key: 'tx_mia3search_search.results', arguments: {0: results.total})}
+				<f:if condition="{results.total}">
+					{f:translate(key: 'tx_mia3search_search.results', arguments: {0: results.total})}
+				</f:if>
 			</div>
 			<f:form.select class="mia-search-language" name="facets[L]" value="{facets.L.value}" optionLabelField="label" optionValueField="value" options="{facets.L.options}" />
 		</div>
 	</f:form>
 
-	<s:paginate items="{results}" as="paginatedResults">
-		<f:for each="{paginatedResults}" as="result">
-			<div class="mia3-search-result">
-				<div class="mia3-search-result-header">
-					<a href="{result.pageUrl}">
-						<s:wrapWords words="{query}">{result.pageTitle}</s:wrapWords>
-					</a>
-				</div>
-				<div class="mia3-search-result-url">
-					<a href="{result.pageUrl}">{result.pageUrl}</a>
-				</div>
-				<div class="mia3-search-result-content">
-					<s:wrapWords words="{query}">{result.content -> f:format.raw() -> f:format.crop(maxCharacters: 600)}</s:wrapWords>
-				</div>
-			</div>
-		</f:for>
-		<f:render partial="Pagination" arguments="{pagination: pagination}"/>
-	</s:paginate>
+	<f:if condition="{results}">
+		<f:then>
+			<s:paginate items="{results}" as="paginatedResults">
+				<f:for each="{paginatedResults}" as="result">
+					<div class="mia3-search-result">
+						<div class="mia3-search-result-header">
+							<a href="{result.pageUrl}">
+								<s:wrapWords words="{query}">{result.pageTitle}</s:wrapWords>
+							</a>
+						</div>
+						<div class="mia3-search-result-url">
+							<a href="{result.pageUrl}">{result.pageUrl}</a>
+						</div>
+						<div class="mia3-search-result-content">
+							<s:wrapWords words="{query}">{result.content -> f:format.raw() -> f:format.crop(maxCharacters: 600)}</s:wrapWords>
+						</div>
+					</div>
+				</f:for>
+				<f:render partial="Pagination" arguments="{pagination: pagination}"/>
+			</s:paginate>
+		</f:then>
+		<f:else>
+			{f:translate(key: 'tx_mia3search_search.no_results')}
+		</f:else>
+	</f:if>
 </div>

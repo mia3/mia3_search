@@ -15,7 +15,7 @@
 			</trans-unit>
 			<trans-unit id="tx_mia3search_search.no_results">
 				<source>no results found</source>
-				<target>no results found</target>
+				<target>Aucun résultat trouvé</target>
 			</trans-unit>
 			<trans-unit id="tx_mia3search_search.search">
 				<source>search</source>

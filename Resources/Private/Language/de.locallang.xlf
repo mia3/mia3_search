@@ -4,26 +4,27 @@
 		<header/>
 		<body>
 			<trans-unit id="tx_mia3search_domain_model_search">
-				<source>Search</source>
+				<source>search</source>
+				<target>Finden</target>
 			</trans-unit>
 			<trans-unit id="tx_mia3search_domain_model_search.name">
 				<source>Name</source>
 			</trans-unit>
 			<trans-unit id="tx_mia3search_search.results">
 				<source>%1$s results</source>
-				<target>%1$s results</target>
+				<target>%1$s Ergebnisse gefunden</target>
 			</trans-unit>
 			<trans-unit id="tx_mia3search_search.no_results">
 				<source>no results found</source>
-				<target>no results found</target>
+				<target>Keine Ergebnisse gefunden.</target>
 			</trans-unit>
 			<trans-unit id="tx_mia3search_search.search">
 				<source>search</source>
-				<target>search</target>
+				<target>Finden</target>
 			</trans-unit>
 			<trans-unit id="tx_mia3search_search.input_placeholder">
 				<source>Your search phrase</source>
-				<target>search</target>
+				<target>Suchbegriff</target>
 			</trans-unit>
 		</body>
 	</file>
