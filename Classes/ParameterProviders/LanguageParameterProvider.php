@@ -56,6 +56,7 @@ class LanguageParameterProvider implements ParameterProviderInterface
             if (is_array($languages)) {
                 foreach ($languages as $language) {
                     $parameterGroup['L'] = $language['sys_language_uid'];
+                    $parameterGroup['pageTitle'] = $language['title'];
                     $newParameterGroups[] = $parameterGroup;
                 }
             }
@@ -73,7 +74,7 @@ class LanguageParameterProvider implements ParameterProviderInterface
     public function getPageLanguages($pageUid)
     {
         return $this->database->exec_SELECTgetRows(
-            'sys_language_uid',
+            'sys_language_uid, title',
             'pages_language_overlay',
             'pid = ' . $pageUid . BackendUtility::BEenableFields('pages_language_overlay'),
             '',
