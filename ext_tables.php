@@ -9,28 +9,28 @@ if (!defined('TYPO3_MODE')) {
 	'Search'
 );
 
-if (TYPO3_MODE === 'BE') {
-
-	/**
-	 * Registers a Backend Module
-	 */
-	\TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerModule(
-		'MIA3.' . $_EXTKEY,
-		'web',	 // Make module a submodule of 'web'
-		'search',	// Submodule key
-		'',						// Position
-		array(
-			'Backend' => 'index',
-			
-		),
-		array(
-			'access' => 'user,group',
-			'icon'   => 'EXT:' . $_EXTKEY . '/ext_icon.gif',
-			'labels' => 'LLL:EXT:' . $_EXTKEY . '/Resources/Private/Language/locallang_search.xlf',
-		)
-	);
-
-}
+//if (TYPO3_MODE === 'BE') {
+//
+//	/**
+//	 * Registers a Backend Module
+//	 */
+//	\TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerModule(
+//		'MIA3.' . $_EXTKEY,
+//		'web',	 // Make module a submodule of 'web'
+//		'search',	// Submodule key
+//		'',						// Position
+//		array(
+//			'Backend' => 'index',
+//
+//		),
+//		array(
+//			'access' => 'user,group',
+//			'icon'   => 'EXT:' . $_EXTKEY . '/ext_icon.gif',
+//			'labels' => 'LLL:EXT:' . $_EXTKEY . '/Resources/Private/Language/locallang_search.xlf',
+//		)
+//	);
+//
+//}
 
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addStaticFile($_EXTKEY, 'Configuration/TypoScript', 'Search made awesome');
 
