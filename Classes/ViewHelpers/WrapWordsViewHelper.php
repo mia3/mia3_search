@@ -40,7 +40,7 @@ class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
         }
 
         if ($wordsBeforeMatch > 0) {
-            $content = $this->cutBeforeMatch($content, $words, $wordsBeforeMatch, $prefix);
+//            $content = $this->cutBeforeMatch($content, $words, $wordsBeforeMatch, $prefix);
         }
 
         if ($crop !== null) {
