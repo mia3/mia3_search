@@ -95,6 +95,11 @@ class ContentIndexer
     public function indexPage($pageUid, $baseUrl)
     {
         $pageRow = $this->getPage(($pageUid));
+        $doktypes = GeneralUtility::trimExplode(',', $this->settings['doktypes']);
+        if (!in_array($pageRow['doktype'], $doktypes)) {
+            return;
+        }
+
         $parameterGroups = array(
             array(
                 'id' => $pageUid,
@@ -211,7 +216,7 @@ class ContentIndexer
     public function getSitePages($pid)
     {
         $queryGenerator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\QueryGenerator');
-        $query = 'hidden = 0 AND doktype IN (' . $this->settings['doktypes'] . ')';
+        $query = 'hidden = 0';
         $pageUidList = $queryGenerator->getTreeList($pid, PHP_INT_MAX, 0, $query);
 
         return explode(',', $pageUidList);
