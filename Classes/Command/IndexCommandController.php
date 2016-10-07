@@ -22,11 +22,12 @@ class IndexCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\CommandCo
 
     /**
      * Update mia3_search indexes
+     * @param string $pageIds
      */
-    public function updateCommand()
+    public function updateCommand($pageIds = NULL)
     {
         $indexer = $this->objectManager->get(ContentIndexer::class);
-        $indexer->update();
+        $indexer->update($pageIds);
     }
 
 }

@@ -51,10 +51,15 @@ class ContentIndexer
 
     /**
      * Update mia3_search indexes
+     * @param string $pageIds
      */
-    public function update()
+    public function update($pageIds = null)
     {
         $sites = $this->getSites();
+
+        if (is_string($pageIds)) {
+            $pageIds = GeneralUtility::trimExplode(',', $pageIds);
+        }
 
         foreach ($sites as $site) {
             $this->settings = $this->configurationManager->getPageTypoScript($site['uid'],
@@ -65,7 +70,7 @@ class ContentIndexer
             }
 
             $this->index = new Index($this->settings);
-            $this->indexSite($site);
+            $this->indexSite($site, $pageIds);
         }
     }
 
@@ -74,7 +79,7 @@ class ContentIndexer
      *
      * @param integer $site
      */
-    public function indexSite($site)
+    public function indexSite($site, $pageIds)
     {
         $baseUrl = $this->getBaseUrl($site['uid']);
         if ($baseUrl === NULL) {
@@ -82,6 +87,9 @@ class ContentIndexer
         }
         $pages = $this->getSitePages($site['uid']);
         foreach ($pages as $pageUid) {
+            if ($pageIds !== null && !in_array($pageUid, $pageIds)) {
+                continue;
+            }
             $this->indexPage($pageUid, $baseUrl);
         }
     }
