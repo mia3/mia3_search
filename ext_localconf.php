@@ -49,10 +49,16 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['pageContentFilters'] = ar
     'ensureWhitespaceBetweenTags' => function($pageContent) {
         return preg_replace("/><([A-Za-z\/])/is", "> <$1", $pageContent);
     },
-	'scriptTags' => function($pageContent) {
-		return preg_replace("/<script\\b[^>]*>(.*?)<\\/script>/is", "", $pageContent);
-	},
+    'scriptTags' => function($pageContent) {
+        return preg_replace("/<script\\b[^>]*>(.*?)<\\/script>/is", "", $pageContent);
+    },
+    'styletTags' => function($pageContent) {
+        return preg_replace("/<style\\b[^>]*>(.*?)<\\/style>/is", "", $pageContent);
+    },
+    'stripTags' => function($pageContent) {
+        return strip_tags($pageContent);
+    },
 	'lineBreaks' => function($pageContent) {
-		return str_replace("\n", '', strip_tags($pageContent));
+		return str_replace("\n", '', $pageContent);
 	}
 );
