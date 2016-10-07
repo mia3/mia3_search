@@ -33,9 +33,10 @@ if (class_exists('\GeorgRinger\News\Controller\NewsController')) {
 //    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'][] = '\MIA3\Mia3Search\ParameterProviders\Mia3LocationParameterProvider';
 //}
 
-$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['indexingBlacklist'] = array(
-    '.mia3-search-unindexed'
-);
+if (!isset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['indexingBlacklist'])) {
+    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['indexingBlacklist'] = array();
+}
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['indexingBlacklist'][] = '.mia3-search-unindexed';
 
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['pageContentFilters'] = array(
     'cssFilter' => function($pageContent) {
