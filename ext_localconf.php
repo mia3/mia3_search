@@ -33,7 +33,22 @@ if (class_exists('\GeorgRinger\News\Controller\NewsController')) {
 //    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'][] = '\MIA3\Mia3Search\ParameterProviders\Mia3LocationParameterProvider';
 //}
 
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['indexingBlacklist'] = array(
+    '.mia3-search-unindexed'
+);
+
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['pageContentFilters'] = array(
+    'cssFilter' => function($pageContent) {
+        try {
+            $content = new \Wa72\HtmlPageDom\HtmlPageCrawler($pageContent);
+            $content->filter(implode(', ', $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['indexingBlacklist']))->remove();
+            return $content->html();
+        } catch(\Exception $e) {}
+        return $pageContent;
+    },
+    'ensureWhitespaceBetweenTags' => function($pageContent) {
+        return preg_replace("/><([A-Za-z\/])/is", "> <$1", $pageContent);
+    },
 	'scriptTags' => function($pageContent) {
 		return preg_replace("/<script\\b[^>]*>(.*?)<\\/script>/is", "", $pageContent);
 	},
