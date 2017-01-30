@@ -10,8 +10,11 @@ namespace MIA3\Mia3Search\Service;
  * file that was distributed with this source code.
  */
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Promise\EachPromise;
 use MIA3\Mia3Search\ParameterProviders\ParameterProviderInterface;
 use MIA3\Saku\Index;
+use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\DatabaseConnection;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -86,12 +89,57 @@ class ContentIndexer
             return;
         }
         $pages = $this->getSitePages($site['uid']);
+        $parameterGroups = array();
         foreach ($pages as $pageUid) {
             if ($pageIds !== null && !in_array($pageUid, $pageIds)) {
                 continue;
             }
-            $this->indexPage($pageUid, $baseUrl);
+
+            $parameterGroups = array_merge(
+                $parameterGroups,
+                $this->getParameterGroups($pageUid, $baseUrl)
+            );
         }
+
+        $client = new Client();
+
+        $promises = (function () use ($parameterGroups, $client) {
+            foreach ($parameterGroups as $parameterGroup) {
+                yield $client->requestAsync('GET', $this->getPageUrl($parameterGroup));
+            }
+        })();
+
+        (new EachPromise($promises, [
+            'concurrency' => 1,
+            'fulfilled' => function (ResponseInterface $response, $index) use ($parameterGroups) {
+                $parameterGroup = $parameterGroups[$index];
+
+                $start = microtime(TRUE);
+                $parameterGroup['content'] = strval($response->getBody());
+                $parameterGroup['pageUrl'] = $this->getPageSpeakingUrl($parameterGroup['content']);
+                $parameterGroup['language'] = $this->getLanguage($parameterGroup['content']);
+                $parameterGroup['content'] = $this->applyPageContentFilters($parameterGroup['content']);
+                $parameterGroup['indexedAt'] = (new \DateTime())->format(\DateTime::ISO8601);
+
+                $categories = CategoryApi::getRelatedCategories($parameterGroup['id'], 'categories', 'pages');
+                $parameterGroup['categories'] = array();
+                foreach ($categories as $category) {
+                    $parameterGroup['categories'][] = $category['uid'];
+                }
+
+                if (empty($parameterGroup['pageUrl'])) {
+                    return;
+                }
+
+                try {
+                    $this->index->addObject(
+                        $parameterGroup,
+                        $parameterGroup['pageUrl']
+                    );
+                } catch (\Exception $e) {
+                }
+            }
+        ]))->promise()->wait();
     }
 
     /**
@@ -100,12 +148,12 @@ class ContentIndexer
      * @param integer $pageUid
      * @param string $baseUrl
      */
-    public function indexPage($pageUid, $baseUrl)
+    public function getParameterGroups($pageUid, $baseUrl)
     {
         $pageRow = $this->getPage(($pageUid));
         $doktypes = GeneralUtility::trimExplode(',', $this->settings['doktypes']);
         if (!in_array($pageRow['doktype'], $doktypes)) {
-            return;
+            return array();
         }
 
         $parameterGroups = array(
@@ -123,36 +171,7 @@ class ContentIndexer
                 $parameterGroups = $parameterProvider->extendParameterGroups($parameterGroups);
             }
         }
-
-        foreach ($parameterGroups as $parameterGroup) {
-            $start = microtime();
-            $parameterGroup['content'] = $this->getPageContent($parameterGroup);
-            $parameterGroup['pageUrl'] = $this->getPageUrl($parameterGroup['content']);
-            $parameterGroup['language'] = $this->getLanguage($parameterGroup['content']);
-            $parameterGroup['content'] = $this->applyPageContentFilters($parameterGroup['content']);
-            $parameterGroup['indexedAt'] = (new \DateTime())->format(\DateTime::ISO8601);
-
-            $categories = CategoryApi::getRelatedCategories($parameterGroup['id'], 'categories', 'pages');
-            $parameterGroup['categories'] = array();
-            foreach ($categories as $category) {
-                $parameterGroup['categories'][] = $category['uid'];
-            }
-
-            if (empty($parameterGroup['pageUrl'])) {
-                echo 'Failed to index ' . $parameterGroup['id'] . chr(10);
-                continue;
-            }
-
-            try {
-                $this->index->addObject(
-                    $parameterGroup,
-                    $parameterGroup['pageUrl']
-                );
-            } catch (\Exception $e) {
-                var_dump($e->getMessage());
-            }
-            echo 'Indexed in ' . number_format(microtime() . $start, 2) . 's ' . chr(10);
-        }
+        return $parameterGroups;
     }
 
     public function getParameterProviders()
@@ -180,7 +199,7 @@ class ContentIndexer
      * @param string $pageContent
      * @return string
      */
-    public function getPageUrl($pageContent)
+    public function getPageSpeakingUrl($pageContent)
     {
         preg_match('/<!--PageUrl:(.*)-->/Us', $pageContent, $match);
 
@@ -245,9 +264,27 @@ class ContentIndexer
         $parameterGroup['no_cache'] = 1;
         $parameterGroup['columnPositions'] = implode(',', $this->getColumnPositions($pageUid));
         $url = $baseUrl . 'index.php?' . http_build_query($parameterGroup);
-        echo $url . chr(10);
 
         return GeneralUtility::getUrl($url);
+    }
+
+    /**
+     * Fetch content of a specific parameter combination from the frontend
+     *
+     * @param array $parameterGroup
+     * @return string
+     */
+    public function getPageUrl($parameterGroup)
+    {
+        $baseUrl = $parameterGroup['baseUrl'];
+        unset($parameterGroup['baseUrl']);
+
+        $parameterGroup['type'] = 3728;
+        $parameterGroup['no_cache'] = 1;
+        $parameterGroup['columnPositions'] = implode(',', $this->getColumnPositions($pageUid));
+        $url = $baseUrl . 'index.php?' . http_build_query($parameterGroup);
+
+        return $url;
     }
 
     /**
