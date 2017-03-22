@@ -77,6 +77,12 @@ class ContentIndexer
         }
     }
 
+    public function generatePromises($parameterGroups, $client) {
+        foreach ($parameterGroups as $parameterGroup) {
+            yield $client->requestAsync('GET', $this->getPageUrl($parameterGroup));
+        }
+    }
+
     /**
      * index a certain page
      *
@@ -102,15 +108,8 @@ class ContentIndexer
         }
 
         $client = new Client();
-
-        $promises = (function () use ($parameterGroups, $client) {
-            foreach ($parameterGroups as $parameterGroup) {
-                yield $client->requestAsync('GET', $this->getPageUrl($parameterGroup));
-            }
-        })();
-
-        (new EachPromise($promises, [
-            'concurrency' => 1,
+        $promise = new EachPromise($this->generatePromises($parameterGroups, $client), [
+            'concurrency' => 3,
             'fulfilled' => function (ResponseInterface $response, $index) use ($parameterGroups) {
                 $parameterGroup = $parameterGroups[$index];
 
@@ -139,7 +138,8 @@ class ContentIndexer
                 } catch (\Exception $e) {
                 }
             }
-        ]))->promise()->wait();
+        ]);
+        $promise->promise()->wait();
     }
 
     /**
