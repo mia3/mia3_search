@@ -41,7 +41,7 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['indexingBlacklist'][] = '
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['pageContentFilters'] = array(
     'cssFilter' => function($pageContent) {
         try {
-            $content = new \Wa72\HtmlPageDom\HtmlPageCrawler($pageContent);
+            $content = new \Wa72\HtmlPageDom\HtmlPageCrawler('<html><body>' . $pageContent . '</body></html>');
             $content->filter(implode(', ', $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['indexingBlacklist']))->remove();
             return $content->html();
         } catch(\Exception $e) {}
