@@ -71,6 +71,9 @@ class ContentIndexer
             $pageIds = GeneralUtility::trimExplode(',', $pageIds);
         }
 
+        $this->database->exec_TRUNCATEquery('tx_mia3search_contents');
+        $this->database->exec_TRUNCATEquery('tx_mia3search_objects');
+
         foreach ($sites as $site) {
             $this->settings = $this->configurationManager->getPageTypoScript($site['uid'],
                 'plugin.tx_mia3search_search.settings');
