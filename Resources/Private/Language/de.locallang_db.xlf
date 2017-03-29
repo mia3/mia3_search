@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+	<file source-language="en" datatype="plaintext" original="messages" date="2016-05-14T23:23:48Z" product-name="mia3_search">
+		<header/>
+		<body>
+			<trans-unit id="tx_mia3search_domain_model_search">
+				<source>Search</source>
+			</trans-unit>
+			<trans-unit id="tx_mia3search_domain_model_search.name">
+				<source>Name</source>
+			</trans-unit>
+			<trans-unit id="pages.tx_mia3search_ignore">
+				<source>Search</source>
+				<target>Suche</target>
+			</trans-unit>
+			<trans-unit id="pages.tx_mia3search_ignore.disable">
+				<source>Disable indexing of this page</source>
+				<target>Diese Seite von der Suche ausschließen</target>
+			</trans-unit>
+			<trans-unit id="pages.tx_mia3search_ignore.disable_children">
+				<source>Disable indexing of the pages beneath this page</source>
+				<target>Die Unterseiten dieser Seite von der Suche ausschließen</target>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>
