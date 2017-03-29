@@ -9,6 +9,18 @@
 			<trans-unit id="tx_mia3search_domain_model_search.name">
 				<source>Name</source>
 			</trans-unit>
+			<trans-unit id="pages.tx_mia3search_ignore">
+				<source>Search</source>
+				<target>Search</target>
+			</trans-unit>
+			<trans-unit id="pages.tx_mia3search_ignore.disable">
+				<source>Disable indexing of this page</source>
+				<target>Disable indexing of this page</target>
+			</trans-unit>
+			<trans-unit id="pages.tx_mia3search_ignore.disable_children">
+				<source>Disable indexing of the pages beneath this page</source>
+				<target>Disable indexing of the pages beneath this page</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

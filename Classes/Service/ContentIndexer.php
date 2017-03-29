@@ -18,6 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\DatabaseConnection;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Frontend\Page\PageRepository;
 
 /**
  * Class ContentIndexer
@@ -31,6 +32,12 @@ class ContentIndexer
      * @inject
      */
     protected $configurationManager;
+
+    /**
+     * @var \TYPO3\CMS\Frontend\Page\PageRepository
+     * @inject
+     */
+    protected $pageRepository;
 
     /**
      * @var DatabaseConnection
@@ -77,7 +84,8 @@ class ContentIndexer
         }
     }
 
-    public function generatePromises($parameterGroups, $client) {
+    public function generatePromises($parameterGroups, $client)
+    {
         foreach ($parameterGroups as $parameterGroup) {
             yield $client->requestAsync('GET', $this->getPageUrl($parameterGroup));
         }
@@ -91,13 +99,17 @@ class ContentIndexer
     public function indexSite($site, $pageIds)
     {
         $baseUrl = $this->getBaseUrl($site['uid']);
-        if ($baseUrl === NULL) {
+        if ($baseUrl === null) {
             return;
         }
         $pages = $this->getSitePages($site['uid']);
         $parameterGroups = array();
         foreach ($pages as $pageUid) {
             if ($pageIds !== null && !in_array($pageUid, $pageIds)) {
+                continue;
+            }
+
+            if ($this->pageShouldBeIgnored($pageUid)) {
                 continue;
             }
 
@@ -113,7 +125,7 @@ class ContentIndexer
             'fulfilled' => function (ResponseInterface $response, $index) use ($parameterGroups) {
                 $parameterGroup = $parameterGroups[$index];
 
-                $start = microtime(TRUE);
+                $start = microtime(true);
                 $parameterGroup['content'] = strval($response->getBody());
                 $parameterGroup['pageUrl'] = $this->getPageSpeakingUrl($parameterGroup['content']);
                 $parameterGroup['language'] = $this->getLanguage($parameterGroup['content']);
@@ -137,9 +149,24 @@ class ContentIndexer
                     );
                 } catch (\Exception $e) {
                 }
-            }
+            },
         ]);
         $promise->promise()->wait();
+    }
+
+    public function pageShouldBeIgnored($pageUid)
+    {
+        $pageRow = $this->getPage(($pageUid));
+        if ($pageRow['tx_mia3search_ignore'] > 0) {
+            return true;
+        }
+        foreach ($this->pageRepository->getRootLine($pageUid) as $parentPage) {
+            if ($parentPage['tx_mia3search_ignore'] > 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -171,6 +198,7 @@ class ContentIndexer
                 $parameterGroups = $parameterProvider->extendParameterGroups($parameterGroups);
             }
         }
+
         return $parameterGroups;
     }
 
@@ -353,7 +381,7 @@ class ContentIndexer
 
         $token = uniqid('', true);
         file_put_contents(PATH_site . 'typo3temp/mia3_search_server_identification', $token);
-        foreach($domainRecords as $domainRecord) {
+        foreach ($domainRecords as $domainRecord) {
             $baseUrl = sprintf('http://%s/', $domainRecord['domainName']);
             $serverIdentificationUrl = $baseUrl . 'index.php?eID=mia3_search_server_identification';
             $remoteToken = GeneralUtility::getUrl($serverIdentificationUrl);

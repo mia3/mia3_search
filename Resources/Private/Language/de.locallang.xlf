@@ -27,6 +27,10 @@
 				<source>Showing Results %1$s to %2$s of %3$s</source>
 				<target>Suchergebnisse %1$s bis %2$s von %3$s</target>
 			</trans-unit>
+			<trans-unit id="pages.tx_mia3search_ignore">
+				<source>Search</source>
+				<target>Suche</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>
