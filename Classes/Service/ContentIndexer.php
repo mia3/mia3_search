@@ -122,7 +122,7 @@ class ContentIndexer
             );
         }
 
-        $client = new Client();
+        $client = new Client(['verify' => false]);
         $promise = new EachPromise($this->generatePromises($parameterGroups, $client), [
             'concurrency' => 3,
             'fulfilled' => function (ResponseInterface $response, $index) use ($parameterGroups) {
@@ -384,12 +384,17 @@ class ContentIndexer
 
         $token = uniqid('', true);
         file_put_contents(PATH_site . 'typo3temp/mia3_search_server_identification', $token);
+        $client = new Client(['verify' => false]);
+        $protocols = ['https', 'http'];
         foreach ($domainRecords as $domainRecord) {
-            $baseUrl = sprintf('http://%s/', $domainRecord['domainName']);
-            $serverIdentificationUrl = $baseUrl . 'index.php?eID=mia3_search_server_identification';
-            $remoteToken = GeneralUtility::getUrl($serverIdentificationUrl);
-            if ($token == $remoteToken) {
-                return $baseUrl;
+            foreach ($protocols as $protocol) {
+                $baseUrl = sprintf($protocol . '://%s/', $domainRecord['domainName']);
+                $serverIdentificationUrl = $baseUrl . 'index.php?eID=mia3_search_server_identification';
+                $result = $client->get($serverIdentificationUrl);
+                $remoteToken = $result->getBody()->__toString();
+                if ($token == $remoteToken) {
+                    return $baseUrl;
+                }
             }
         }
     }
