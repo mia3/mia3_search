@@ -10,8 +10,13 @@
 
 		<div class="mia3-search-secondary">
 			<div class="mia3-search-resultTotal">
-				<f:if condition="{results.total}">
-					{f:translate(key: 'tx_mia3search_search.results', arguments: {0: results.total})}
+				<f:if condition="{results.total} > 1">
+					<f:then>
+						{f:translate(key: 'tx_mia3search_search.results', arguments: {0: results.total})}
+					</f:then>
+					<f:else>
+						{f:translate(key: 'tx_mia3search_search.result', arguments: {0: results.total})}
+					</f:else>
 				</f:if>
 			</div>
 			<f:form.select class="mia-search-language" name="facets[L]" value="{facets.L.value}" optionLabelField="label" optionValueField="value" options="{facets.L.options}" />

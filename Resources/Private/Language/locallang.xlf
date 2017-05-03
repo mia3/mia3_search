@@ -9,6 +9,10 @@
 			<trans-unit id="tx_mia3search_domain_model_search.name">
 				<source>Name</source>
 			</trans-unit>
+			<trans-unit id="tx_mia3search_search.result">
+				<source>%1$s result</source>
+				<target>%1$s result</target>
+			</trans-unit>
 			<trans-unit id="tx_mia3search_search.results">
 				<source>%1$s results</source>
 				<target>%1$s results</target>
