@@ -45,7 +45,7 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['pageContentFilters'] = ar
         try {
             $content = new \Wa72\HtmlPageDom\HtmlPageCrawler('<html><body>' . $pageContent . '</body></html>');
             $content->filter(implode(', ', $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['indexingBlacklist']))->remove();
-            return $content->html();
+            return html_entity_decode($content->html());
         } catch(\Exception $e) {}
         return $pageContent;
     },

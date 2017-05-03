@@ -177,6 +177,7 @@ class ContentIndexer
      *
      * @param integer $pageUid
      * @param string $baseUrl
+     * @return array
      */
     public function getParameterGroups($pageUid, $baseUrl)
     {
@@ -390,10 +391,14 @@ class ContentIndexer
             foreach ($protocols as $protocol) {
                 $baseUrl = sprintf($protocol . '://%s/', $domainRecord['domainName']);
                 $serverIdentificationUrl = $baseUrl . 'index.php?eID=mia3_search_server_identification';
-                $result = $client->get($serverIdentificationUrl);
-                $remoteToken = $result->getBody()->__toString();
-                if ($token == $remoteToken) {
-                    return $baseUrl;
+                try {
+                    $result = $client->get($serverIdentificationUrl);
+                    $remoteToken = $result->getBody()->__toString();
+                    if ($token == $remoteToken) {
+                        return $baseUrl;
+                    }
+                } catch (\Exception $exception) {
+
                 }
             }
         }
