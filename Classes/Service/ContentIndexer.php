@@ -128,7 +128,6 @@ class ContentIndexer
                 $this->getParameterGroups($pageUid, $baseUrl)
             );
         }
-        $parameterGroups = array_slice($parameterGroups, 0, 10);
 
         $client = new Client(['verify' => false]);
         $promise = new EachPromise($this->generatePromises($parameterGroups, $client), [
