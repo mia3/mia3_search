@@ -9,7 +9,7 @@
     }
   ],
   "require": {
-    "mia3/saku": "*",
+    "mia3/saku": "^1.0",
     "symfony/dom-crawler": "^3.1",
     "symfony/css-selector": "^3.1",
     "wa72/htmlpagedom": "^1.3",

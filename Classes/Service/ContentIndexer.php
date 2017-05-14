@@ -71,9 +71,6 @@ class ContentIndexer
             $pageIds = GeneralUtility::trimExplode(',', $pageIds);
         }
 
-        $this->database->exec_TRUNCATEquery('tx_mia3search_contents');
-        $this->database->exec_TRUNCATEquery('tx_mia3search_objects');
-
         foreach ($sites as $site) {
             $this->settings = $this->configurationManager->getPageTypoScript($site['uid'],
                 'plugin.tx_mia3search_search.settings');
@@ -82,8 +79,18 @@ class ContentIndexer
                 continue;
             }
 
-            $this->index = new Index($this->settings);
+            $this->index = new Index(array_replace([
+                    'indexName' => 'index-' . $site['uid']
+                ], $this->settings)
+            );
             $this->indexSite($site, $pageIds);
+
+            $timestamp = time() - 60;
+            $rows = $this->database->exec_SELECTgetRows('id', 'tx_mia3search_objects', 'updated < ' . $timestamp );
+            foreach ($rows as $row) {
+                $this->database->exec_DELETEquery('tx_mia3search_objects' ,'id = ' . $row['id']);
+                $this->database->exec_DELETEquery('tx_mia3search_contents' ,'object = ' . $row['id']);
+            }
         }
     }
 
@@ -121,6 +128,7 @@ class ContentIndexer
                 $this->getParameterGroups($pageUid, $baseUrl)
             );
         }
+        $parameterGroups = array_slice($parameterGroups, 0, 10);
 
         $client = new Client(['verify' => false]);
         $promise = new EachPromise($this->generatePromises($parameterGroups, $client), [
