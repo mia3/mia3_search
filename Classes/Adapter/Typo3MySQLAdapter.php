@@ -28,7 +28,7 @@ class Typo3MySQLAdapter extends MySQLAdapter
         $db = $GLOBALS['TYPO3_CONF_VARS']['DB'];
         $configuration = array_replace(array(
             'database' => $db['database'],
-            'host' => 'localhost',
+            'host' => $db['host'],
             'username' => $db['username'],
             'password' => $db['password'],
             'port' => isset($db['port']) ? $db['port'] : null,
