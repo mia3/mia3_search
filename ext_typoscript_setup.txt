@@ -6,7 +6,7 @@ mia3SearchPage.10 {
 	table = tt_content
 	select {
 		pidInList.data = GP:id
-		where = colPos IN (###columnPositions###)
+		where = colPos NOT IN (18181)
 		markers {
 			columnPositions.data = GP:columnPositions
 		}
