@@ -241,7 +241,7 @@ class ContentIndexer
     {
         preg_match('/<!--PageUrl:(.*)-->/Us', $pageContent, $match);
 
-        return trim($match[1]);
+        return urldecode(trim($match[1]));
     }
 
     /**
