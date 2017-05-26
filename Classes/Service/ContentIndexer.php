@@ -85,11 +85,11 @@ class ContentIndexer
                 ], $this->settings)
             );
             $this->indexSite($site, $pageIds);
-            $rows = $this->database->exec_SELECTgetRows('id', 'tx_mia3search_objects', 'updated < ' . $timestamp);
-            foreach ($rows as $row) {
-                $this->database->exec_DELETEquery('tx_mia3search_objects', 'id = ' . $row['id']);
-                $this->database->exec_DELETEquery('tx_mia3search_contents', 'object = ' . $row['id']);
-            }
+//            $rows = $this->database->exec_SELECTgetRows('id', 'tx_mia3search_objects', 'updated < ' . $timestamp);
+//            foreach ($rows as $row) {
+//                $this->database->exec_DELETEquery('tx_mia3search_objects', 'id = ' . $row['id']);
+//                $this->database->exec_DELETEquery('tx_mia3search_contents', 'object = ' . $row['id']);
+//            }
         }
     }
 
