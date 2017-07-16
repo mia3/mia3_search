@@ -67,7 +67,7 @@ class ContentIndexer
     {
         $sites = $this->getSites();
 
-        if (is_string($pageIds)) {
+        if (is_string($pageIds) && !empty($pageIds)) {
             $pageIds = GeneralUtility::trimExplode(',', $pageIds);
         }
 
@@ -114,7 +114,7 @@ class ContentIndexer
         $pages = $this->getSitePages($site['uid']);
         $parameterGroups = array();
         foreach ($pages as $pageUid) {
-            if ($pageIds !== null && !in_array($pageUid, $pageIds)) {
+            if (is_array($pageIds) && !in_array($pageUid, $pageIds)) {
                 continue;
             }
 
