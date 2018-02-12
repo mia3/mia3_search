@@ -30,6 +30,7 @@ class SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControlle
     /**
      * @param string $query
      * @return void
+     * @throws \Exception
      */
     public function indexAction($query = null)
     {

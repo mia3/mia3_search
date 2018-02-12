@@ -17,6 +17,8 @@ use MIA3\Saku\SearchWordHighlighter;
  */
 class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper
 {
+    protected $escapeOutput = false;
+    
     /**
      *
      * @param mixed $words
