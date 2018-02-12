@@ -25,11 +25,11 @@ class Typo3MySQLAdapter extends MySQLAdapter
      */
     public function __construct($configuration)
     {
-        $db = $GLOBALS['TYPO3_CONF_VARS']['DB'];
+        $db = $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'];
         $configuration = array_replace(array(
-            'database' => $db['database'],
+            'database' => $db['dbname'],
             'host' => $db['host'],
-            'username' => $db['username'],
+            'username' => $db['user'],
             'password' => $db['password'],
             'port' => isset($db['port']) ? $db['port'] : null,
             'socket' => $db['socket'],

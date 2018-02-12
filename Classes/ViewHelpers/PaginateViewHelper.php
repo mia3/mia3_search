@@ -18,6 +18,8 @@ use MIA3\Saku\SearchResults;
  */
 class PaginateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper
 {
+    protected $escapeOutput = false;
+
     /**
      * Initialize arguments.
      *
@@ -26,7 +28,7 @@ class PaginateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
     public function initializeArguments()
     {
         parent::initializeArguments();
-        $this->registerArgument('items', '\TYPO3\CMS\Extbase\Persistence\Generic\QueryResult',
+        $this->registerArgument('items', '\MIA3\Saku\SearchResults',
             'QueryResult to paginate', true);
         $this->registerArgument('as', 'string', 'name of the variable that will contain the paginated QueryResult',
             false, 'paginatedItems');
