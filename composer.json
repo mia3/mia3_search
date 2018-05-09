@@ -9,7 +9,8 @@
     }
   ],
   "require": {
-    "mia3/saku": "1.1.4",
+    "mia3/saku": "^1.0",
+    "symfony/dom-crawler": "^4.0",
     "symfony/css-selector": "^4.0",
     "wa72/htmlpagedom": "^1.3",
     "guzzlehttp/guzzle": "~6.0"

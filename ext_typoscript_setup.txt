@@ -6,27 +6,21 @@ mia3SearchPage.10 {
 	table = tt_content
 	select {
 		pidInList.data = GP:id
-		where = colPos NOT IN (18181)
+		where = colPos NOT IN (18181) AND tt_content.sys_language_uid = ###sys_language_uid###
 		markers {
 			columnPositions.data = GP:columnPositions
+			sys_language_uid.data = GP:L
+			sys_language_uid.intval = 1
 		}
-		andWhere.data = GP:L
-		andWhere.wrap = tt_content.sys_language_uid = |
-		andWhere.intval = 1
 		languageField = 0
 	}
 }
-#mia3SearchPage.10 = RECORDS
-#mia3SearchPage.10 {
-#	source.data = GP:record
-#	dontCheckPid = 1
-#	tables = tt_content
-#}
+
 mia3SearchPage.20 = FLUIDTEMPLATE
 mia3SearchPage.20 {
 	file = typo3conf/ext/mia3_search/Resources/Private/Partials/PageInformation.html
 	variables {
 		language = TEXT
-		language.value < config.language
+		language.value < config.sys_language_uid
 	}
 }
