@@ -17,6 +17,10 @@ plugin.tx_mia3search_search {
 				handler = \MIA3\Mia3Search\FacetHandlers\LanguageFacetHandler
 			}
 		}
+		auth {
+			username =
+			password = 
+		}
 	}
 
 	_CSS_DEFAULT_STYLE (

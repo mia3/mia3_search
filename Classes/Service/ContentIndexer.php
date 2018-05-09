@@ -54,6 +54,16 @@ class ContentIndexer
      */
     protected $settings;
 
+    /**
+     * @var int
+     */
+    protected $logLevel = 0;
+
+    /**
+     * @var Client
+     */
+    protected $client;
+
     public function __construct()
     {
         $this->database = $GLOBALS['TYPO3_DB'];
@@ -63,20 +73,36 @@ class ContentIndexer
      * Update mia3_search indexes
      * @param string $pageIds
      */
-    public function update($pageIds = null)
+    public function update($pageIds = null, $logLevel = 0)
     {
+        $this->logLevel = $logLevel;
+        $this->log('Starting to index');
         $sites = $this->getSites();
 
         if (is_string($pageIds) && !empty($pageIds)) {
+            $this->log('Indexing specific PageIds: ' . $pageIds);
             $pageIds = GeneralUtility::trimExplode(',', $pageIds);
         }
 
         $timestamp = time();
         foreach ($sites as $site) {
+            $this->log('Indexing site: ' . $site['title'] . ' [' . $site['uid'] . ']');
             $this->settings = $this->configurationManager->getPageTypoScript($site['uid'],
                 'plugin.tx_mia3search_search.settings');
 
+            $requestOptions = [
+                'verify' => false
+            ];
+            if (isset($this->settings['auth']['username']) && !empty($this->settings['auth']['username'])) {
+                $requestOptions['auth'] = [
+                    $this->settings['auth']['username'],
+                    $this->settings['auth']['password']
+                ];
+            }
+            $this->client = new Client($requestOptions);
+
             if ($this->settings === null) {
+                $this->log('Failed to gather settings for Site: ' . $site['title'] . ' [' . $site['uid'] . ']');
                 continue;
             }
 
@@ -85,6 +111,7 @@ class ContentIndexer
                 ], $this->settings)
             );
             $this->indexSite($site, $pageIds);
+
 //            $rows = $this->database->exec_SELECTgetRows('id', 'tx_mia3search_objects', 'updated < ' . $timestamp);
 //            foreach ($rows as $row) {
 //                $this->database->exec_DELETEquery('tx_mia3search_objects', 'id = ' . $row['id']);
@@ -109,16 +136,19 @@ class ContentIndexer
     {
         $baseUrl = $this->getBaseUrl($site['uid']);
         if ($baseUrl === null) {
+            $this->log('failed to determined BaseUrl');
             return;
         }
         $pages = $this->getSitePages($site['uid']);
         $parameterGroups = array();
         foreach ($pages as $pageUid) {
             if (is_array($pageIds) && !in_array($pageUid, $pageIds)) {
+                $this->log('page should not be indexed: ' . $pageUid);
                 continue;
             }
 
             if ($this->pageShouldBeIgnored($pageUid)) {
+                $this->log('page should be ignored: ' . $pageUid);
                 continue;
             }
 
@@ -128,8 +158,7 @@ class ContentIndexer
             );
         }
 
-        $client = new Client(['verify' => false]);
-        $promise = new EachPromise($this->generatePromises($parameterGroups, $client), [
+        $promise = new EachPromise($this->generatePromises($parameterGroups, $this->client), [
             'concurrency' => 3,
             'fulfilled' => function (ResponseInterface $response, $index) use ($parameterGroups) {
                 $parameterGroup = $parameterGroups[$index];
@@ -148,6 +177,7 @@ class ContentIndexer
                 }
 
                 if (empty($parameterGroup['pageUrl'])) {
+                    $this->log('failed to determine pageUrl: ' . $parameterGroup);
                     return;
                 }
 
@@ -157,6 +187,7 @@ class ContentIndexer
                         $parameterGroup['pageUrl']
                     );
                 } catch (\Exception $e) {
+                    $this->log('failed to add page to index: ' . $e->getMessage());
                 }
             },
         ]);
@@ -190,6 +221,7 @@ class ContentIndexer
         $pageRow = $this->getPage(($pageUid));
         $doktypes = GeneralUtility::trimExplode(',', $this->settings['doktypes']);
         if (!in_array($pageRow['doktype'], $doktypes)) {
+            $this->log('page "' . $pageRow['title'] . '" doktype[' . $pageRow['doktype'] . '] should not be indexed [' . $this->settings['doktypes'] . ']');
             return array();
         }
 
@@ -208,6 +240,8 @@ class ContentIndexer
                 $parameterGroups = $parameterProvider->extendParameterGroups($parameterGroups);
             }
         }
+
+        $this->log('determined parameterGroups for page: ' . $pageUid . ' ', $parameterGroups);
 
         return $parameterGroups;
     }
@@ -283,6 +317,7 @@ class ContentIndexer
         $queryGenerator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\QueryGenerator');
         $query = 'hidden = 0';
         $pageUidList = $queryGenerator->getTreeList($pid, PHP_INT_MAX, 0, $query);
+        $this->log('PageUids in Site to Index: ' . $pageUidList);
 
         return explode(',', $pageUidList);
     }
@@ -353,11 +388,14 @@ class ContentIndexer
      */
     public function getSites()
     {
-        return $this->database->exec_SELECTgetRows(
+        $sites = $this->database->exec_SELECTgetRows(
             '*',
             'pages',
             'is_siteroot = 1' . BackendUtility::BEenableFields('pages')
         );
+        $this->log('Found ' . count(sites) . ' Site to index');
+
+        return $sites;
     }
 
     /**
@@ -382,7 +420,6 @@ class ContentIndexer
      */
     public function getBaseUrl($siteUid)
     {
-
         $domainRecords = $this->database->exec_SELECTgetRows(
             '*',
             'sys_domain',
@@ -391,22 +428,40 @@ class ContentIndexer
 
         $token = uniqid('', true);
         file_put_contents(PATH_site . 'typo3temp/mia3_search_server_identification', $token);
-        $client = new Client(['verify' => false]);
+        $this->log('create serverIdentificationToken: ' . $token);
         $protocols = ['https', 'http'];
         foreach ($domainRecords as $domainRecord) {
             foreach ($protocols as $protocol) {
                 $baseUrl = sprintf($protocol . '://%s/', $domainRecord['domainName']);
+                $this->log('baseUrl candidate: ' . $baseUrl);
                 $serverIdentificationUrl = $baseUrl . 'index.php?eID=mia3_search_server_identification';
+                $this->log('verificationUrl: ' . $serverIdentificationUrl);
                 try {
-                    $result = $client->get($serverIdentificationUrl);
+                    $result = $this->client->get($serverIdentificationUrl);
                     $remoteToken = $result->getBody()->__toString();
+                    $this->log('verificationToken: ' . $remoteToken);
                     if ($token == $remoteToken) {
+                        $this->log('determined BaseUrl: ' . $baseUrl);
                         return $baseUrl;
                     }
                 } catch (\Exception $exception) {
-
+                    $this->log('failed to verify token: ' . $exception->getMessage());
                 }
             }
         }
     }
+
+    public function log($message, $data = null)
+    {
+        if ($data !== null) {
+            $message .= ' ' . var_export($data, true);
+        }
+        if ($this->logLevel >= 1) {
+            $GLOBALS['BE_USER']->writelog(4, '', 0, 0, '[mia3_search] ' . $message, []);
+        }
+        if ($this->logLevel >= 2) {
+            echo $message . '<br />';
+        }
+    }
+
 }
