@@ -20,6 +20,12 @@ class PaginateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
 {
     protected $escapeOutput = false;
 
+    protected $query = null;
+
+    protected $settings = [];
+
+    protected $request = null;
+
     /**
      * Initialize arguments.
      *
@@ -51,10 +57,13 @@ class PaginateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
      */
     public function render()
     {
+
         $this->query = $this->arguments['items'];
+
         if (!$this->query instanceof SearchResults) {
             return '';
         }
+
         $this->request = $this->controllerContext->getRequest();
 
         $this->settings = $this->arguments['settings'];
@@ -114,7 +123,6 @@ class PaginateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
     public function handlePagination()
     {
         $currentPage = 1;
-
         if ($this->request->hasArgument("page")) {
             $currentPage = $this->request->getArgument("page");
         }

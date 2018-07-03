@@ -12,7 +12,7 @@
 				<f:then><li class="mia3-search-pagination-active mia3-search-pagination-page"></f:then>
 				<f:else><li class="mia3-search-pagination-page"></f:else>
 			</f:if>
-				<f:link.action addQueryString="true" arguments="{page: page}">{page}</f:link.action>
+				<f:link.action addQueryString="true" arguments="{page: page, query: query}">{page}</f:link.action>
 			</li>
 		</f:for>
 		<f:if condition="{pagination.nextPage}">
