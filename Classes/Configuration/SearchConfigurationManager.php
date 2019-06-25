@@ -1,4 +1,5 @@
 <?php
+
 namespace MIA3\Mia3Search\Configuration;
 
 /*
@@ -10,7 +11,9 @@ namespace MIA3\Mia3Search\Configuration;
  * file that was distributed with this source code.
  */
 
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\StringUtility;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 use TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser;
 
@@ -28,6 +31,7 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
 
     /**
      * @param $pageId
+     *
      * @return array
      */
     public static function getRootline($pageId)
@@ -43,8 +47,9 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
     /**
      * get flexform of tt_content
      *
-     * @param $contentUid
+     * @param        $contentUid
      * @param string $field
+     *
      * @return array
      */
     public function getContentFlexform($contentUid, $field = 'pi_flexform')
@@ -74,7 +79,7 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
             $template->setProcessExtensionStatics(true);
             $template->init();
             // Get the root line
-            $rootline = array();
+            $rootline = [];
             if ($pageId > 0) {
                 $rootline = self::getRootline($pageId);
             }
@@ -98,11 +103,12 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
      * Returns the merged Page TSconfig for page id, $id.
      * Please read details about module programming elsewhere!
      *
-     * @param int $id Page uid
+     * @param int    $id Page uid
      * @param string $path
+     *
      * @return array
      */
-    public static function getModTSconfig($id, $path = NULL)
+    public static function getModTSconfig($id, $path = null)
     {
         $tsconfig = GeneralUtility::removeDotsFromTS(static::getPagesTSconfig($id));
 
@@ -116,9 +122,10 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
     /**
      * Returns the Page TSconfig for page with id, $id
      *
-     * @param int $id Page uid for which to create Page TSconfig
-     * @param array $rootLine If $rootLine is an array, that is used as rootline, otherwise rootline is just calculated
-     * @param bool $returnPartArray If $returnPartArray is set, then the array with accumulated Page TSconfig is returned non-parsed. Otherwise the output will be parsed by the TypoScript parser.
+     * @param int   $id              Page uid for which to create Page TSconfig
+     * @param array $rootLine        If $rootLine is an array, that is used as rootline, otherwise rootline is just calculated
+     * @param bool  $returnPartArray If $returnPartArray is set, then the array with accumulated Page TSconfig is returned non-parsed. Otherwise the output will be parsed by the TypoScript parser.
+     *
      * @return array Page TSconfig
      * @see \TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser
      */
@@ -127,7 +134,7 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
         static $pagesTSconfig_cacheReference = [];
         static $combinedTSconfig_cache = [];
 
-        $id = (int)$id;
+        $id = (int) $id;
         if ($returnPartArray === false
             && $rootLine === null
             && isset($pagesTSconfig_cacheReference[$id])
@@ -159,14 +166,16 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
                                 2
                             );
                             if (
-                                (string)$includeTsConfigFileExtensionKey !== ''
+                                (string) $includeTsConfigFileExtensionKey !== ''
                                 && ExtensionManagementUtility::isLoaded($includeTsConfigFileExtensionKey)
-                                && (string)$includeTsConfigFilename !== ''
+                                && (string) $includeTsConfigFilename !== ''
                             ) {
-                                $includeTsConfigFileAndPath = ExtensionManagementUtility::extPath($includeTsConfigFileExtensionKey) .
+                                $includeTsConfigFileAndPath = ExtensionManagementUtility::extPath($includeTsConfigFileExtensionKey)
+                                    .
                                     $includeTsConfigFilename;
                                 if (file_exists($includeTsConfigFileAndPath)) {
-                                    $TSdataArray['uid_' . $v['uid'] . '_static_' . $key] = GeneralUtility::getUrl($includeTsConfigFileAndPath);
+                                    $TSdataArray['uid_' . $v['uid'] . '_static_'
+                                    . $key] = GeneralUtility::getUrl($includeTsConfigFileAndPath);
                                 }
                             }
                         }
@@ -187,6 +196,7 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
                 $TSconfig = $res['TSconfig'];
             }
         }
+
         return $TSconfig;
     }
 }
