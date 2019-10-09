@@ -25,16 +25,27 @@ class Typo3MySQLAdapter extends MySQLAdapter
      */
     public function __construct($configuration)
     {
-        $db = $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'];
-        $configuration = array_replace(array(
-            'database' => $db['dbname'],
-            'host' => $db['host'],
-            'username' => $db['user'],
-            'password' => $db['password'],
-            'port' => isset($db['port']) ? $db['port'] : null,
-            'socket' => $db['socket'],
-            'table_prefix' => 'tx_mia3search_',
-        ), $configuration);
+        if (isset($GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'])) {
+            $configuration = array_replace(array(
+                'database' => $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']['dbname'],
+                'host' => $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']['host'],
+                'username' => $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']['user'],
+                'password' => $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']['password'],
+                'port' => isset($GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']['port']) ? $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']['port'] : null,
+                'socket' => $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']['socket'],
+                'table_prefix' => 'tx_mia3search_',
+            ), $configuration);
+        } else {
+            $configuration = array_replace(array(
+                'database' => $GLOBALS['TYPO3_CONF_VARS']['DB']['database'],
+                'host' => $GLOBALS['TYPO3_CONF_VARS']['DB']['host'],
+                'username' => $GLOBALS['TYPO3_CONF_VARS']['DB']['username'],
+                'password' => $GLOBALS['TYPO3_CONF_VARS']['DB']['password'],
+                'port' => isset($GLOBALS['TYPO3_CONF_VARS']['DB']['port']) ? $GLOBALS['TYPO3_CONF_VARS']['DB']['port'] : null,
+                'socket' => $GLOBALS['TYPO3_CONF_VARS']['DB']['socket'],
+                'table_prefix' => 'tx_mia3search_',
+            ), $configuration);
+        }
 
         parent::__construct($configuration);
     }
