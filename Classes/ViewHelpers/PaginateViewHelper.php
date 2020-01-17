@@ -64,7 +64,7 @@ class PaginateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHe
             return '';
         }
 
-        $this->request = $this->controllerContext->getRequest();
+        $this->request = $this->renderingContext->getControllerContext()->getRequest();
 
         $this->settings = $this->arguments['settings'];
 

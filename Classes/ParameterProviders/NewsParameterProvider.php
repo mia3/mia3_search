@@ -13,6 +13,7 @@ namespace MIA3\Mia3Search\ParameterProviders;
 use GeorgRinger\News\Controller\NewsController;
 use MIA3\Mia3Search\Configuration\BackendConfigurationManager;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Page\PageRepository;
@@ -24,11 +25,6 @@ use TYPO3\CMS\Frontend\Page\PageRepository;
 class NewsParameterProvider extends NewsController implements ParameterProviderInterface
 {
     /**
-     * @var DatabaseConnection
-     */
-    protected $database;
-
-    /**
      * @var \MIA3\Mia3Search\Configuration\SearchConfigurationManager
      * @inject
      */
@@ -39,7 +35,6 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
      */
     public function __construct()
     {
-        $this->database = $GLOBALS['TYPO3_DB'];
     }
 
     /**
@@ -125,20 +120,24 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
     public function getLocalizedNewsRecord($newRecord, $parameterGroup)
     {
         $languageUid = isset($parameterGroup['L']) ? $parameterGroup['L'] : 0;
-        $row = $this->database->exec_SELECTgetSingleRow(
-            '*',
-            'tx_news_domain_model_news',
-            sprintf(
-                '(
-                    (l10n_parent = %1$s AND sys_language_uid = %2$s) 
-                    OR (uid = %1$s AND sys_language_uid = -1)
-                    OR (uid = %1$s AND sys_language_uid = %2$s)
+
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_news_domain_model_news');
+        $row = $queryBuilder
+	        ->select('*')
+	        ->from('tx_news_domain_model_news')
+			->add(
+				'where',
+				'(
+                    (`l10n_parent` = ' . $newRecord->getUid() . ' AND `sys_language_uid` = ' . $languageUid . ') 
+                    OR (`uid` = ' . $newRecord->getUid() . ' AND `sys_language_uid` = -1)
+                    OR (`uid` = ' . $newRecord->getUid() . ' AND `sys_language_uid` = ' . $languageUid . ')
                 ) 
-                AND deleted = 0 AND hidden = 0',
-                $newRecord->getUid(),
-                $languageUid
-            ) . BackendUtility::BEenableFields('tx_news_domain_model_news')
-        );
+                AND `deleted` = 0 AND `hidden` = 0'
+				. BackendUtility::BEenableFields('tx_news_domain_model_news'),
+				true
+			)
+	        ->execute()
+	        ->fetch();
 
         return $row;
     }
@@ -153,15 +152,20 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
     {
         $pageUid = $parameterGroup['id'];
         $language = isset($parameterGroup['L']) ? $parameterGroup['L'] : '0';
-        $where = 'list_type = "news_pi1" AND pid = ' . $pageUid;
-        $where .= ' AND sys_language_uid IN (' . $language . ',-1)';
-        $where .= BackendUtility::BEenableFields('tt_content');
 
-        return $this->database->exec_SELECTgetRows(
-            '*',
-            'tt_content',
-            $where
-        );
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
+        return $queryBuilder
+	        ->select('*')
+	        ->from('tt_content')
+	        ->add(
+	        	'where',
+		        '`list_type` = "news_pi1" AND `pid` = ' . $pageUid
+		        . ' AND `sys_language_uid` IN (' . $language . ',-1)'
+		        . BackendUtility::BEenableFields('tt_content'),
+		        true
+	        )
+	        ->execute()
+	        ->fetchAll();
     }
 
     public function getDetailPage($settings, $newsItem, $fallbackPid = 0)

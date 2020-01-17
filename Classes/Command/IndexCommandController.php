@@ -11,24 +11,42 @@ namespace MIA3\Mia3Search\Command;
  */
 
 use MIA3\Mia3Search\Service\ContentIndexer;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 /**
  * Class IndexCommandController
  * @package MIA3\Mia3Search\Command
  */
-class IndexCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\CommandController
+class IndexCommandController extends Command
 {
 
-    /**
-     * Update mia3_search indexes
-     * @param string $pageIds
-     * @param int logLevel
-     */
-    public function updateCommand($pageIds = NULL, $logLevel = 0)
-    {
-        $indexer = $this->objectManager->get(ContentIndexer::class);
-        $indexer->update($pageIds, $logLevel);
-    }
+	/**
+	 * Configure the command by defining the name, options and arguments
+	 */
+	protected function configure()
+	{
+		$this
+			// configure arguments
+			->addArgument('pageIds', InputArgument::OPTIONAL)
+			->addArgument('logLevel', InputArgument::OPTIONAL)
+		;
+	}
 
+	/**
+	 * Executes the command for indexing the pages
+	 *
+	 * @param InputInterface $input
+	 * @param OutputInterface $output
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output)
+	{
+		$objectManager = GeneralUtility::makeInstance(ObjectManager::class);
+		$indexer = $objectManager->get(ContentIndexer::class);
+		$indexer->update($input->getArgument('pageIds'), $input->getArgument('logLevel'));
+	}
 }

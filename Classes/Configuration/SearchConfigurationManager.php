@@ -54,11 +54,15 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
      */
     public function getContentFlexform($contentUid, $field = 'pi_flexform')
     {
-        $row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-            '*',
-            'tt_content',
-            'uid = ' . $contentUid
-        );
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
+        $row = $queryBuilder
+	        ->select('*')
+	        ->from('tt_content')
+	        ->where(
+	        	$queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($contentUid))
+	        )
+	        ->execute()
+	        ->fetch();
 
         return $this->flexformService->convertFlexFormContentToArray($row[$field]);
     }

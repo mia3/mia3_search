@@ -10,20 +10,17 @@ namespace MIA3\Mia3Search\FacetHandlers;
  * file that was distributed with this source code.
  */
 
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+
 /**
  * Class DefaultFacetHandler
  * @package MIA3\Mia3Search\FacetHandlers
  */
 class DefaultFacetHandler implements FacetHandlerInterface
 {
-    /**
-     * @var DatabaseConnection
-     */
-    protected $databaseConnection;
-
     public function __construct()
     {
-        $this->databaseConnection = $GLOBALS['TYPO3_DB'];
     }
 
     /**
@@ -38,15 +35,18 @@ class DefaultFacetHandler implements FacetHandlerInterface
             foreach ($facet['options'] as $option) {
                 $ids[] = '"' . str_replace('"', '\"', $option['value']) . '"';
             }
-            $rows = $this->databaseConnection->exec_SELECTgetRows(
-                $facet['labelField'] . ',' . $facet['idField'],
-                $facet['table'],
-                sprintf('%s IN (%s)', $facet['idField'], implode(', ', $ids)),
-                '',
-                '',
-                '',
-                $facet['idField']
-            );
+
+            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($facet['table']);
+			$statement = $queryBuilder->select($facet['labelField'], $facet['idField'])
+				->from($facet['table'])
+				->where(
+					$queryBuilder->expr()->in($facet['idField'],$queryBuilder->createNamedParameter($ids))
+				)
+				->execute();
+			$rows = array();
+	        while ($row = $statement->fetch()) {
+	        	$rows[$row[$facet['idField']]] = $row[$facet['labelField']];
+	        }
 
             foreach ($facet['options'] as $key => $option) {
                 if (isset($rows[$option['value']][$facet['labelField']])) {

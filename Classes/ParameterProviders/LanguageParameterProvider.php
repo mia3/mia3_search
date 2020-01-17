@@ -11,6 +11,8 @@ namespace MIA3\Mia3Search\ParameterProviders;
  */
 
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Class LanguageParameterProvider
@@ -18,14 +20,8 @@ use TYPO3\CMS\Backend\Utility\BackendUtility;
  */
 class LanguageParameterProvider implements ParameterProviderInterface
 {
-    /**
-     * @var DatabaseConnection
-     */
-    protected $database;
-
     public function __construct()
     {
-        $this->database = $GLOBALS['TYPO3_DB'];
     }
 
     /**
@@ -73,14 +69,18 @@ class LanguageParameterProvider implements ParameterProviderInterface
      */
     public function getPageLanguages($pageUid)
     {
-        return $this->database->exec_SELECTgetRows(
-            'sys_language_uid, title',
-            'pages_language_overlay',
-            'pid = ' . $pageUid . BackendUtility::BEenableFields('pages_language_overlay'),
-            '',
-            '',
-            '',
-            'sys_language_uid'
-        );
+    	$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
+	    $statement = $queryBuilder
+		    ->select('sys_language_uid', 'title')
+		    ->from('pages')
+		    ->add('where', '`l10n_parent` = ' . $pageUid . BackendUtility::BEenableFields('pages'), true)
+		    ->execute();
+
+	    $languageUids = array();
+	    while ($row = $statement->fetch()) {
+	    	$languageUids[$row['sys_language_uid']] = $row;
+	    }
+
+        return $languageUids;
     }
 }

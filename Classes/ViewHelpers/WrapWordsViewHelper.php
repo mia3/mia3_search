@@ -18,7 +18,25 @@ use MIA3\Saku\SearchWordHighlighter;
 class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper
 {
     protected $escapeOutput = false;
-    
+
+    public function initializeArguments()
+    {
+	    parent::initializeArguments();
+	    $this->registerArgument('words', 'mixed',
+		    'Searched words', true);
+	    $this->registerArgument('wrap', 'string', 'wrap',
+		    false, '<strong>|</strong>');
+	    $this->registerArgument('crop', 'integer', 'value for crop',
+		    false, null);
+	    $this->registerArgument('suffix', 'string', 'suffix',
+		    false, '&hellip;');
+	    $this->registerArgument('prefix', 'string', 'prefix',
+		    false, '&hellip;');
+	    $this->registerArgument('wordsBeforeMatch', 'string', 'words to show before a match',
+		    false, '10');
+
+    }
+
     /**
      *
      * @param mixed $words
@@ -29,22 +47,15 @@ class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewH
      * @param string $wordsBeforeMatch
      * @return string
      */
-    public function render(
-        $words,
-        $wrap = '<strong>|</strong>',
-        $crop = null,
-        $suffix = '&hellip;',
-        $prefix = '&hellip;',
-        $wordsBeforeMatch = 10
-    )
+    public function render()
     {
         $highlighter = new SearchWordHighlighter($this->renderChildren());
-        $highlighter->setWrap($wrap);
-        $highlighter->setCrop($crop);
-        $highlighter->setPrefix($prefix);
-        $highlighter->setSuffix($suffix);
-        $highlighter->setWordsBeforeMatch($wordsBeforeMatch);
+        $highlighter->setWrap($this->arguments['wrap']);
+        $highlighter->setCrop($this->arguments['crop']);
+        $highlighter->setPrefix($this->arguments['prefix']);
+        $highlighter->setSuffix($this->arguments['suffix']);
+        $highlighter->setWordsBeforeMatch($this->arguments['wordsBeforeMatch']);
 
-        return $highlighter->highlight($words);
+        return $highlighter->highlight($this->arguments['words']);
     }
 }
