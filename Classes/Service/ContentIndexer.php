@@ -413,7 +413,7 @@ class ContentIndexer
 	        ->execute()
 	        ->fetchAll();
 
-        $this->log('Found ' . count(sites) . ' Site to index');
+        $this->log('Found ' . count($sites) . ' Site to index');
 
         return $sites;
     }
