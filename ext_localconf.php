@@ -22,8 +22,8 @@ $GLOBALS['TYPO3_CONF_VARS']['FE']['eID_include']['mia3_search_server_identificat
 
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks'][\MIA3\Mia3Search\Task\IndexTask::class] = [
     'extension' => 'mia3_search',
-    'title' => 'index',
-    'description' => 'Indexes pages for mia3_search',
+    'title' => 'LLL:EXT:mia3_search/Resources/Private/Language/locallang_task.xlf:tx_mia3search_task.title',
+    'description' => 'LLL:EXT:mia3_search/Resources/Private/Language/locallang_task.xlf:tx_mia3search_task.description',
 ];
 
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'] = array(
