@@ -15,7 +15,7 @@
 you can use the ```index:update`` command to manually start the indexing process
 
 ```
-./typo3/cli_dispatch.phpsh extbase index:update
+./vendor/bin/typo3 mia3search:index
 ```
 
 **periodic indexing**

@@ -11,6 +11,8 @@ namespace MIA3\Mia3Search\Service;
  */
 
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Class CategoryApi
@@ -43,16 +45,23 @@ class CategoryApi
 
     public static function getChildCategories($parentUids, $children = array())
     {
-        $rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-            '*',
-            'sys_category',
-            'parent IN (' . $parentUids . ') AND sys_language_uid = 0' .
-            static::enableFields('sys_category'),
-            '',
-            '',
-            '',
-            'uid'
-        );
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+        $statement = $queryBuilder
+	        ->select('*')
+	        ->from('sys_category')
+	        ->add(
+	        	'where',
+	        	'`parent` IN (' . $parentUids . ') AND `sys_language_uid` = 0' .
+		        static::enableFields('sys_category'),
+		        true
+	        )
+	        ->execute();
+
+        $rows = array();
+        while ($row = $statement->fetch()) {
+        	$rows[$row['uid']] = $row;
+        }
+
         $children = array_replace($children, (array)$rows);
 
         return $children;
@@ -60,28 +69,44 @@ class CategoryApi
 
     public static function getCategory($uid)
     {
-        $row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-            '*',
-            'sys_category',
-            'uid IN (' . $uid . ')' .
-            static::enableFields('sys_category')
-        );
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+        $row = $queryBuilder
+	        ->select('*')
+	        ->from('sys_category')
+	        ->add(
+	        	'where',
+		        '`uid` IN (' . $uid . ')' .
+		        static::enableFields('sys_category'),
+		        true
+	        )
+	        ->execute()
+	        ->fetch();
 
         return $row;
     }
 
     public static function getRelatedCategories($uids, $field, $tablenames = 'tt_content')
     {
-        return $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-            'sys_category.*',
-            'sys_category, sys_category_record_mm',
-            '
-				sys_category.uid = sys_category_record_mm.uid_local
-				AND fieldname = "' . $field . '"
-				AND tablenames = "' . $tablenames . '"
-				AND uid_foreign IN (' . $uids . ') ' .
-            static::enableFields('sys_category')
-        );
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+        return $queryBuilder
+	        ->select('sys_category.*')
+	        ->from('sys_category')
+	        ->leftJoin(
+	        	'sys_category',
+		        'sys_category_record_mm',
+		        'sys_category_record_mm',
+		        $queryBuilder->expr()->eq('sys_category.uid', $queryBuilder->quoteIdentifier('sys_category_record_mm.uid_local'))
+	        )
+	        ->add(
+	        	'where',
+		        '`fieldname` = "' . $field . '"
+		        AND `tablenames` = "' . $tablenames . '"
+		        AND `uid_foreign` IN (' . $uids . ') ' .
+		        static::enableFields('sys_category'),
+		        true
+	        )
+	        ->execute()
+	        ->fetchAll();
     }
 
     public function getItemsByCategories($categories, $tableName, $field = null, $limit = 10, $offset = 0)
@@ -94,23 +119,31 @@ class CategoryApi
             }
             $categories = implode(',', $categories);
         }
-        $query = $tableName . '.uid = sys_category_record_mm.uid_foreign
-		AND tablenames = "' . $tableName . '"
-		AND uid_local IN (' . $categories . ') ' .
+	    $queryWhere = '`tablenames` = "' . $tableName . '"
+		AND `uid_local` IN (' . $categories . ') ' .
             static::enableFields($tableName);
 
         if ($field !== null) {
-            $query .= ' AND fieldname = "' . $field . '"';
+	        $queryWhere .= ' AND `fieldname` = "' . $field . '"';
         }
 
-        return $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-            $tableName . '.*',
-            $tableName . ', sys_category_record_mm',
-            $query,
-            $tableName . '.uid',
-            '',
-            $offset . ',' . $limit
-        );
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
+        return $queryBuilder
+	        ->select($tableName . '.*')
+	        ->from($tableName)
+	        ->leftJoin(
+		        $tableName,
+		        'sys_category_record_mm',
+		        'sys_category_record_mm',
+		        $queryBuilder->expr()->eq($tableName . '.uid', $queryBuilder->quoteIdentifier('sys_category_record_mm.uid_foreign'))
+	        )
+	        ->add(
+	        	'where',
+		        $queryWhere,
+		        true
+	        )
+	        ->execute()
+	        ->fetchAll();
     }
 
     public static function enableFields($table)

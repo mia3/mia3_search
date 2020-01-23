@@ -11,6 +11,8 @@ namespace MIA3\Mia3Search\ParameterProviders;
  */
 
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Class Mia3LocationParameterProvider
@@ -18,16 +20,11 @@ use TYPO3\CMS\Backend\Utility\BackendUtility;
  */
 class Mia3LocationParameterProvider implements ParameterProviderInterface
 {
-    /**
-     * @var DatabaseConnection
-     */
-    protected $database;
 
     protected $plugin = 'mia3location_locations';
 
     public function __construct()
     {
-        $this->database = $GLOBALS['TYPO3_DB'];
     }
 
     /**
@@ -58,25 +55,36 @@ class Mia3LocationParameterProvider implements ParameterProviderInterface
     {
         $pageUid = $parameterGroup['id'];
         $language = isset($parameterGroup['L']) ? $parameterGroup['L'] : '0';
-        $where = 'list_type = "' . $this->plugin . '" AND pid = ' . $pageUid;
-        $where .= ' AND sys_language_uid IN (' . $language . ',-1)';
-        $where .= BackendUtility::BEenableFields('tt_content');
 
-        $rows = $this->database->exec_SELECTgetRows(
-            '*',
-            'tt_content',
-            $where
-        );
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
+        $rows = $queryBuilder
+	        ->select('*')
+	        ->from('tt_content')
+	        ->add(
+	        	'where',
+		        '`list_type` = "' . $this->plugin . '" AND `pid` = ' . $pageUid
+		        . ' AND `sys_language_uid` IN (' . $language . ',-1)'
+		        . BackendUtility::BEenableFields('tt_content'),
+		        true
+	        )
+	        ->execute()
+	        ->fetchAll();
 
         if (empty($rows)) {
             return array();
         }
 
-        $rows = $this->database->exec_SELECTgetRows(
-            '*',
-            'tx_mia3location_domain_model_location',
-            '1=1' . BackendUtility::BEenableFields('tx_mia3location_domain_model_location')
-        );
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_mia3location_domain_model_location');
+        $rows = $queryBuilder
+	        ->select('*')
+	        ->from('tx_mia3location_domain_model_location')
+	        ->add(
+	        	'where',
+		        '1=1' . BackendUtility::BEenableFields('tx_mia3location_domain_model_location'),
+		        true
+	        )
+	        ->execute()
+	        ->fetchAll();
 
         $parameterGroups = array();
         foreach ($rows as $row) {
@@ -100,14 +108,18 @@ class Mia3LocationParameterProvider implements ParameterProviderInterface
      */
     public function getPageLanguages($pageUid)
     {
-        return $this->database->exec_SELECTgetRows(
-            'sys_language_uid',
-            'pages_language_overlay',
-            'pid = ' . $pageUid . BackendUtility::BEenableFields('pages_language_overlay'),
-            '',
-            '',
-            '',
-            'sys_language_uid'
-        );
+	    $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
+	    $statement = $queryBuilder
+		    ->select('sys_language_uid')
+		    ->from('pages')
+		    ->add('where', '`l10n_parent` = ' . $pageUid . BackendUtility::BEenableFields('pages'), true)
+		    ->execute();
+
+	    $languageUids = array();
+	    while ($row = $statement->fetch()) {
+		    $languageUids[$row['sys_language_uid']] = $row;
+	    }
+
+	    return $languageUids;
     }
 }

@@ -12,7 +12,6 @@ namespace MIA3\Mia3Search\Controller;
 
 use MIA3\Mia3Search\FacetHandlers\DefaultFacetHandler;
 use MIA3\Saku\Index;
-use TYPO3\CMS\Core\Database\DatabaseConnection;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -21,12 +20,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionController
 {
-
-    /**
-     * @var DatabaseConnection
-     */
-    protected $databaseConnection;
-
     /**
      * @param string $query
      * @return void
@@ -40,7 +33,6 @@ class SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionControlle
 
         $index = new Index($this->settings);
         $this->view->assign('query', $query);
-        $this->databaseConnection = $GLOBALS['TYPO3_DB'];
 
         $options = array();
         if ($this->request->hasArgument('facets')) {

@@ -14,6 +14,7 @@ namespace MIA3\Mia3Search\Configuration;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 use TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser;
 
@@ -54,11 +55,15 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
      */
     public function getContentFlexform($contentUid, $field = 'pi_flexform')
     {
-        $row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-            '*',
-            'tt_content',
-            'uid = ' . $contentUid
-        );
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
+        $row = $queryBuilder
+	        ->select('*')
+	        ->from('tt_content')
+	        ->where(
+	        	$queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($contentUid))
+	        )
+	        ->execute()
+	        ->fetch();
 
         return $this->flexformService->convertFlexFormContentToArray($row[$field]);
     }

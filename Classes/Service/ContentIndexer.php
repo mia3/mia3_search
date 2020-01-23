@@ -16,7 +16,7 @@ use MIA3\Mia3Search\ParameterProviders\ParameterProviderInterface;
 use MIA3\Saku\Index;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Database\DatabaseConnection;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Page\PageRepository;
 
@@ -40,11 +40,6 @@ class ContentIndexer
     protected $pageRepository;
 
     /**
-     * @var DatabaseConnection
-     */
-    protected $database;
-
-    /**
      * @var Index
      */
     protected $index;
@@ -66,7 +61,6 @@ class ContentIndexer
 
     public function __construct()
     {
-        $this->database = $GLOBALS['TYPO3_DB'];
     }
 
     /**
@@ -112,11 +106,31 @@ class ContentIndexer
             );
             $this->indexSite($site, $pageIds);
 
-            $rows = $this->database->exec_SELECTgetRows('id', 'tx_mia3search_objects', 'updated < ' . $timestamp);
-            foreach ($rows as $row) {
-                $this->database->exec_DELETEquery('tx_mia3search_objects', 'id = ' . $row['id']);
-                $this->database->exec_DELETEquery('tx_mia3search_contents', 'object = ' . $row['id']);
-            }
+	        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_mia3search_objects');
+	        $rows = $queryBuilder->select('id')
+		        ->from('tx_mia3search_objects')
+		        ->where(
+			        $queryBuilder->expr()->lt('updated',$timestamp)
+		        )
+		        ->execute()
+	            ->fetchAll();
+	        foreach ($rows as $row) {
+				$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_mia3search_objects');
+				$queryBuilder
+					->delete('tx_mia3search_objects')
+					->where(
+						$queryBuilder->expr()->eq('id', $row['id'])
+					)
+					->execute();
+
+				$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_mia3search_contents');
+		        $queryBuilder
+			        ->delete('tx_mia3search_contents')
+			        ->where(
+				        $queryBuilder->expr()->eq('object', $row['id'])
+			        )
+			        ->execute();
+	        }
         }
     }
 
@@ -314,7 +328,7 @@ class ContentIndexer
      */
     public function getSitePages($pid)
     {
-        $queryGenerator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\QueryGenerator');
+        $queryGenerator = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Database\\QueryGenerator');
         $query = 'hidden = 0';
         $pageUidList = $queryGenerator->getTreeList($pid, PHP_INT_MAX, 0, $query);
         $this->log('PageUids in Site to Index: ' . $pageUidList);
@@ -368,17 +382,20 @@ class ContentIndexer
      */
     public function getColumnPositions($pageUid)
     {
-        $rows = $this->database->exec_SELECTgetRows(
-            'colPos',
-            'tt_content',
-            'colPos > -1 AND colPos NOT IN(18181) ' . BackendUtility::BEenableFields('tt_content'),
-            'colPos',
-            '',
-            '',
-            'colPos'
-        );
+		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
+	    $statement = $queryBuilder
+			->select('colPos')
+			->from('tt_content')
+			->add('where', '(`colPos` > -1) AND (`colPos` NOT IN (18181))' . BackendUtility::BEenableFields('tt_content'), 1)
+			->groupBy('colPos')
+			->execute();
 
-        return array_keys($rows);
+	    $colPos = array();
+	    while ($row = $statement->fetch()) {
+		    $colPos[] = $row['colPos'];
+	    }
+
+        return $colPos;
     }
 
     /**
@@ -388,12 +405,15 @@ class ContentIndexer
      */
     public function getSites()
     {
-        $sites = $this->database->exec_SELECTgetRows(
-            '*',
-            'pages',
-            'is_siteroot = 1' . BackendUtility::BEenableFields('pages')
-        );
-        $this->log('Found ' . count(sites) . ' Site to index');
+    	$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
+        $sites = $queryBuilder
+	        ->select('*')
+	        ->from('pages')
+	        ->add('where', '`is_siteroot` = 1' . BackendUtility::BEenableFields('pages'), true)
+	        ->execute()
+	        ->fetchAll();
+
+        $this->log('Found ' . count($sites) . ' Site to index');
 
         return $sites;
     }
@@ -401,15 +421,20 @@ class ContentIndexer
     /**
      * get all available sites
      *
+     * @param integer $pid
      * @return array
      */
     public function getPage($pid)
     {
-        return $this->database->exec_SELECTgetSingleRow(
-            '*',
-            'pages',
-            'uid = ' . $pid . BackendUtility::BEenableFields('pages')
-        );
+    	$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
+		$row = $queryBuilder
+			->select('*')
+			->from('pages')
+			->add('where', '`uid` = ' . $pid . BackendUtility::BEenableFields('pages'), 1)
+			->execute()
+			->fetch();
+
+	    return $row;
     }
 
     /**
@@ -420,11 +445,13 @@ class ContentIndexer
      */
     public function getBaseUrl($siteUid)
     {
-        $domainRecords = $this->database->exec_SELECTgetRows(
-            '*',
-            'sys_domain',
-            'pid = ' . $siteUid . BackendUtility::BEenableFields('sys_domain')
-        );
+    	$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_domain');
+    	$domainRecords = $queryBuilder
+		    ->select('*')
+		    ->from('sys_domain')
+		    ->add('where', '`pid` = ' . $siteUid . BackendUtility::BEenableFields('sys_domain'), 1)
+		    ->execute()
+		    ->fetchAll();
 
         $token = uniqid('', true);
         file_put_contents(PATH_site . 'typo3temp/mia3_search_server_identification', $token);
