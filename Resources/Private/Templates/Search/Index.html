@@ -1,6 +1,6 @@
 {namespace s=MIA3\Mia3Search\ViewHelpers}
 <div class="mia3-search">
-	<f:form action="index" class="mia3-search-form" method="get">
+	<f:form action="index" class="mia3-search-form" method="post">
 		<div class="mia3-search-primary">
 			<f:form.textfield name="query" value="{query}" placeholder="{f:translate(key: 'tx_mia3search_search.input_placeholder')}" class="mia3-search-query"/>
 			<button type="submit" class="mia3-search-submit">
