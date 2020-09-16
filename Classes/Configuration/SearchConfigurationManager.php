@@ -11,12 +11,15 @@ namespace MIA3\Mia3Search\Configuration;
  * file that was distributed with this source code.
  */
 
+use Symfony\Component\EventDispatcher\GenericEvent;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\RootlineUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 use TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser;
+use TYPO3\CMS\Extbase\Annotation\Inject;
 
 /**
  * Class SearchConfigurationManager
@@ -26,7 +29,7 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
 {
     /**
      * @var \TYPO3\CMS\Extbase\Service\FlexFormService
-     * @inject
+     * @Inject
      */
     protected $flexformService;
 
@@ -37,10 +40,10 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
      */
     public static function getRootline($pageId)
     {
-        /** @var $sysPage \TYPO3\CMS\Frontend\Page\PageRepository */
-        $sysPage = GeneralUtility::makeInstance(\TYPO3\CMS\Frontend\Page\PageRepository::class);
+        /** @var RootlineUtility $rootlineUtility */
+        $rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $pageId);
         // Get the rootline for the current page
-        $rootline = $sysPage->getRootLine($pageId, '', true);
+        $rootline = $rootlineUtility->get();
 
         return $rootline;
     }
@@ -82,7 +85,6 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
             $template->tt_track = 0;
             // Explicitly trigger processing of extension static files
             $template->setProcessExtensionStatics(true);
-            $template->init();
             // Get the root line
             $rootline = [];
             if ($pageId > 0) {
@@ -96,7 +98,6 @@ class SearchConfigurationManager extends \TYPO3\CMS\Extbase\Configuration\Backen
 
         $typoscript = $this->typoScriptSetupCache[$pageId];
         $typoscript = GeneralUtility::removeDotsFromTS($typoscript);
-
         if ($path !== null) {
             $typoscript = ObjectAccess::getPropertyPath($typoscript, $path);
         }

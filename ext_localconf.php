@@ -4,21 +4,20 @@ if (!defined('TYPO3_MODE')) {
 }
 
 \TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
-	'MIA3.' . $_EXTKEY,
+	'mia3_search',
 	'Search',
 	array(
-		'Search' => 'index',
-		
+		'MIA3\Mia3Search\Controller\SearchController' => 'index',
+
 	),
 	// non-cacheable actions
 	array(
-		'Search' => 'index',
-		
+		'MIA3\Mia3Search\Controller\SearchController' => 'index',
 	)
 );
 
 
-$GLOBALS['TYPO3_CONF_VARS']['FE']['eID_include']['mia3_search_server_identification'] = 'EXT:mia3_search/Classes/Eid/ServerIdentificationEid.php';
+$GLOBALS['TYPO3_CONF_VARS']['FE']['eID_include']['mia3_search_server_identification'] = \MIA3\Mia3Search\Eid\ServerIdentificationEid::class . '::printTokenFile';
 
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks'][\MIA3\Mia3Search\Task\IndexTask::class] = [
     'extension' => 'mia3_search',

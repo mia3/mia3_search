@@ -13,6 +13,7 @@ namespace MIA3\Mia3Search\Service;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
 
 /**
  * Class CategoryApi
@@ -148,8 +149,10 @@ class CategoryApi
 
     public static function enableFields($table)
     {
-        if (isset($GLOBALS['TSFE']->cObj)) {
-            return $GLOBALS['TSFE']->cObj->enableFields($table);
+        /** @var PageRepository $pageRepository */
+        $pageRepository = GeneralUtility::makeInstance(PageRepository::class);
+        if ($pageRepository) {
+            return $pageRepository->enableFields($table);
         }
 
         return BackendUtility::BEenableFields($table);
