@@ -19,7 +19,7 @@ plugin.tx_mia3search_search {
 		}
 		auth {
 			username =
-			password = 
+			password =
 		}
 	}
 

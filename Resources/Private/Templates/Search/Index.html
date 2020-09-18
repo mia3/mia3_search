@@ -40,7 +40,7 @@
 							<a href="{result.pageUrl}">{result.pageUrl}</a>
 						</div>
 						<div class="mia3-search-result-content">
-							<s:wrapWords words="{query}">{result.content -> f:format.raw() -> f:format.crop(maxCharacters: 600)}</s:wrapWords>
+							<s:wrapWords words="{query}" crop="100">{result.content -> f:format.raw()}</s:wrapWords>
 						</div>
 					</div>
 				</f:for>

@@ -10,12 +10,13 @@ namespace MIA3\Mia3Search\ViewHelpers;
  * file that was distributed with this source code.
  */
 use MIA3\Saku\SearchWordHighlighter;
+use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
  * Class WrapWordsViewHelper
  * @package MIA3\Mia3Search\ViewHelpers
  */
-class WrapWordsViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper
+class WrapWordsViewHelper extends AbstractViewHelper
 {
     protected $escapeOutput = false;
 

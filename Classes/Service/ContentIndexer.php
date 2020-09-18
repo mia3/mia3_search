@@ -13,13 +13,19 @@ namespace MIA3\Mia3Search\Service;
 use GuzzleHttp\Client;
 use GuzzleHttp\Promise\EachPromise;
 use GuzzleHttp\Exception\RequestException;
+use MIA3\Mia3Search\Configuration\SearchConfigurationManager;
 use MIA3\Mia3Search\ParameterProviders\ParameterProviderInterface;
 use MIA3\Saku\Index;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
+use TYPO3\CMS\Core\Exception\SiteNotFoundException;
+use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Frontend\Page\PageRepository;
+use TYPO3\CMS\Core\Utility\RootlineUtility;
 
 /**
  * Class ContentIndexer
@@ -30,13 +36,11 @@ class ContentIndexer
 
     /**
      * @var \MIA3\Mia3Search\Configuration\SearchConfigurationManager
-     * @inject
      */
     protected $configurationManager;
 
     /**
-     * @var \TYPO3\CMS\Frontend\Page\PageRepository
-     * @inject
+     * @var PageRepository
      */
     protected $pageRepository;
 
@@ -60,8 +64,10 @@ class ContentIndexer
      */
     protected $client;
 
-    public function __construct()
+    public function __construct(SearchConfigurationManager $configurationManager, PageRepository $pageRepository)
     {
+        $this->configurationManager = $configurationManager;
+        $this->pageRepository = $pageRepository;
     }
 
     /**
@@ -74,6 +80,7 @@ class ContentIndexer
         $this->log('Starting to index');
         $sites = $this->getSites();
 
+
         if (is_string($pageIds) && !empty($pageIds)) {
             $this->log('Indexing specific PageIds: ' . $pageIds);
             $pageIds = GeneralUtility::trimExplode(',', $pageIds);
@@ -82,9 +89,11 @@ class ContentIndexer
         $timestamp = time();
         foreach ($sites as $site) {
             $this->log('Indexing site: ' . $site['title'] . ' [' . $site['uid'] . ']');
-            $this->settings = $this->configurationManager->getPageTypoScript($site['uid'],
+            if($site['sys_language_uid'] !== 0){
+                $l10nParent = isset($site['l10n_state']) ? $site['l10n_parent'] : null;
+            }
+            $this->settings = $this->configurationManager->getPageTypoScript($l10nParent ?? $site['uid'],
                 'plugin.tx_mia3search_search.settings');
-
             $requestOptions = [
                 'verify' => false
             ];
@@ -219,7 +228,14 @@ class ContentIndexer
         if ($pageRow['tx_mia3search_ignore'] > 0) {
             return true;
         }
-        foreach ($this->pageRepository->getRootLine($pageUid) as $parentPage) {
+
+        if($pageRow['l10n_state'] !== null){
+            return true;
+        }
+
+        /** @var RootlineUtility $rootlineUtility */
+        $rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $pageUid);
+        foreach ($rootlineUtility->get() as $parentPage) {
             if ($parentPage['tx_mia3search_ignore'] > 1) {
                 return true;
             }
@@ -269,13 +285,10 @@ class ContentIndexer
     {
         $parameterProviders = (array)$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['mia3_search']['parameterProviders'];
 
-        $objectManager = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class);
-
         // create instances
-        array_walk($parameterProviders, function (&$parameterProvider) use ($objectManager) {
-            $parameterProvider = $objectManager->get(ltrim($parameterProvider, '\\'));
+        array_walk($parameterProviders, function (&$parameterProvider){
+            $parameterProvider =  GeneralUtility::makeInstance(ltrim($parameterProvider, '\\'));
         });
-
         // sort instances by priority
         usort($parameterProviders, function ($left, $right) {
             return $left->getPriority() > $right->getPriority();
@@ -451,35 +464,35 @@ class ContentIndexer
      */
     public function getBaseUrl($siteUid)
     {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_domain');
-        $domainRecords = $queryBuilder
-            ->select('*')
-            ->from('sys_domain')
-            ->add('where', '`pid` = ' . $siteUid . BackendUtility::BEenableFields('sys_domain'), 1)
-            ->execute()
-            ->fetchAll();
+        /** @var SiteFinder $siteFinder */
+        $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
+        try{
+            /** @var Site $siteObject */
+            $siteObject = $siteFinder->getSiteByPageId($siteUid);
+            $domainRecord = $siteObject->getBase();
+        }catch (SiteNotFoundException $e){
+            return null;
+        }
 
         $token = uniqid('', true);
-        file_put_contents(PATH_site . 'typo3temp/mia3_search_server_identification', $token);
+        file_put_contents(Environment::getPublicPath() . '/typo3temp/mia3_search_server_identification', $token);
         $this->log('create serverIdentificationToken: ' . $token);
         $protocols = ['https', 'http'];
-        foreach ($domainRecords as $domainRecord) {
-            foreach ($protocols as $protocol) {
-                $baseUrl = sprintf($protocol . '://%s/', $domainRecord['domainName']);
-                $this->log('baseUrl candidate: ' . $baseUrl);
-                $serverIdentificationUrl = $baseUrl . 'index.php?eID=mia3_search_server_identification';
-                $this->log('verificationUrl: ' . $serverIdentificationUrl);
-                try {
-                    $result = $this->client->get($serverIdentificationUrl);
-                    $remoteToken = $result->getBody()->__toString();
-                    $this->log('verificationToken: ' . $remoteToken);
-                    if ($token == $remoteToken) {
-                        $this->log('determined BaseUrl: ' . $baseUrl);
-                        return $baseUrl;
-                    }
-                } catch (\Exception $exception) {
-                    $this->log('failed to verify token: ' . $exception->getMessage());
+        foreach ($protocols as $protocol) {
+            $baseUrl = sprintf($protocol . '://%s/', $domainRecord->getHost());
+            $this->log('baseUrl candidate: ' . $baseUrl);
+            $serverIdentificationUrl = $baseUrl . 'index.php?eID=mia3_search_server_identification';
+            $this->log('verificationUrl: ' . $serverIdentificationUrl);
+            try {
+                $result = $this->client->get($serverIdentificationUrl);
+                $remoteToken = $result->getBody()->__toString();
+                $this->log('verificationToken: ' . $remoteToken);
+                if ($token == $remoteToken) {
+                    $this->log('determined BaseUrl: ' . $baseUrl);
+                    return $baseUrl;
                 }
+            } catch (\Exception $exception) {
+                $this->log('failed to verify token: ' . $exception->getMessage());
             }
         }
     }

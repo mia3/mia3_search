@@ -1,5 +1,5 @@
 <?php
-namespace MIA3\Mia3Search\Command;
+namespace MIA3\Mia3Search\Commands;
 
 /*
  * This file is part of the mia3/mia3_search package.
@@ -15,17 +15,25 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Class IndexCommandController
  * @package MIA3\Mia3Search\Command
  */
-class IndexCommandController extends Command
+class IndexCommand extends Command
 {
+    /**
+     * @var ContentIndexer
+     */
+    private $contentIndexer;
 
-	/**
+    public function __construct(ContentIndexer $contentIndexer) {
+        parent::__construct();
+        $this->contentIndexer = $contentIndexer;
+    }
+
+    /**
 	 * Configure the command by defining the name, options and arguments
 	 */
 	protected function configure()
@@ -45,8 +53,7 @@ class IndexCommandController extends Command
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$objectManager = GeneralUtility::makeInstance(ObjectManager::class);
-		$indexer = $objectManager->get(ContentIndexer::class);
-		$indexer->update($input->getArgument('pageIds'), $input->getArgument('logLevel'));
+		$this->contentIndexer->update($input->getArgument('pageIds'), $input->getArgument('logLevel'));
+		return 0;
 	}
 }

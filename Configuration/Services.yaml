@@ -1,0 +1,14 @@
+# Configuration/Services.yaml
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  MIA3\Mia3Search\:
+    resource: '../Classes/*'
+
+  MIA3\Mia3Search\Commands\IndexCommand:
+    tags:
+      - name: 'console.command'
+        command: 'mia3search:index'

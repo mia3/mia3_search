@@ -11,12 +11,13 @@ namespace MIA3\Mia3Search\ViewHelpers;
  */
 
 use MIA3\Saku\SearchResults;
+use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
  * Class PaginateViewHelper
  * @package MIA3\Mia3Search\ViewHelpers
  */
-class PaginateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper
+class PaginateViewHelper extends AbstractViewHelper
 {
     protected $escapeOutput = false;
 

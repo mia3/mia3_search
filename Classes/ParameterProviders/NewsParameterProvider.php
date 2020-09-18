@@ -17,6 +17,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Page\PageRepository;
+use TYPO3\CMS\Extbase\Annotation\Inject;
 
 /**
  * Class NewsParameterProvider
@@ -26,7 +27,7 @@ class NewsParameterProvider extends NewsController implements ParameterProviderI
 {
     /**
      * @var \MIA3\Mia3Search\Configuration\SearchConfigurationManager
-     * @inject
+     * @Inject
      */
     protected $configurationManager;
 

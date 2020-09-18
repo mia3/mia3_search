@@ -4,7 +4,7 @@
 
 1. install mia3_search extension through "composer require mia3/mia3_search"
 2. include mia3_search typoscript
-3. make sure you have a domain entry on every root site you wish to index
+3. make sure you have set a valid domain as `Entry Point [base]` in every Site Configuration (Make sure to use a full domain as Entry Point not just a '/', for proper functionality)
 4. insert search plugin to search page
 5. you're done, start by indexing using the command controller or setup the scheduler.
 
@@ -20,7 +20,7 @@ you can use the ```index:update`` command to manually start the indexing process
 
 **periodic indexing**
 
-you can use the scheduler to schedule a periodic execution of the ```index:update``` command 
+you can use the scheduler to schedule a periodic execution of the ```index:update``` command
 
 ## Configuration
 
@@ -38,17 +38,7 @@ plugin.tx_mia3search_search {
 }
 ```
 
-**ElasticSearchAdapter**
-
-```
-plugin.tx_mia3search_search {
-   settings {
-      adapter = \MIA3\Saku\Adapter\ElasticSearchAdapter
-      hosts = http://localhost:30080/
-      index = some_index_name
-   }
-}
-```
+_ElasticSearchAdapter was removed from mia3/saku because of outdated dependencies_
 
 ### excluding content from the index
 
