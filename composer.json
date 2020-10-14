@@ -10,7 +10,7 @@
   ],
   "require": {
     "typo3/cms-core": ">=9.0.0",
-    "mia3/saku": "^1.0",
+    "mia3/saku": "^2.0",
     "symfony/dom-crawler": "^4.0",
     "symfony/css-selector": "^4.0",
     "wa72/htmlpagedom": "^1.3",
